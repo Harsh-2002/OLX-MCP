@@ -26,6 +26,13 @@ export class GetListingDetailsTool extends BaseTool<GetListingDetailsArgs, Listi
       throw result.error;
     }
 
-    return result.data;
+    if (args.includeImages) {
+      return result.data;
+    }
+
+    // Callers that opted out of image URLs get neither the gallery nor the
+    // thumbnail taken from it.
+    const { images: _images, imageUrl: _imageUrl, ...withoutImages } = result.data;
+    return withoutImages;
   }
 }

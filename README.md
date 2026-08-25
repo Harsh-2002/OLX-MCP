@@ -120,7 +120,7 @@ Show me details for listing "XYZ789" from OLX Poland including images?
 **Parameters:**
 - `domain` (required): OLX domain ('olx.pt', 'olx.pl', 'olx.bg', 'olx.ro', 'olx.ua')
 - `listingId` (required): The ID of the listing
-- `includeImages` (default: false): Include image URLs
+- `includeImages` (default: true): Include the listing's gallery image URLs
 - `includeSellerInfo` (default: true): Include seller information
 
 ## Development

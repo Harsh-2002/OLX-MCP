@@ -12,6 +12,7 @@ import {
   DomainConfig,
 } from '../../core/types.js';
 import { getDomainConfig } from './domain-config.js';
+import { extractDescriptionText, extractGalleryImages } from './dom-extractors.js';
 
 export abstract class BaseOlxScraper extends PlaywrightScraper<SearchFilters, SearchResult> {
   private static readonly URL_CACHE_LIMIT = 2000;
@@ -327,11 +328,15 @@ export abstract class BaseOlxScraper extends PlaywrightScraper<SearchFilters, Se
       }
 
       const detail = this.domainConfig.selectors.detail;
-      const [title, price, description, location, seller] = await Promise.all([
+      const [title, price, description, location, images, seller] = await Promise.all([
         readText(page, detail.title),
         readOptionalText(page, detail.price),
-        readOptionalText(page, detail.description),
+        // Read through the extractor rather than readOptionalText: the
+        // description container opens with a localised heading that the
+        // container's own textContent would prepend to every description.
+        page.$eval(detail.description, extractDescriptionText).catch(() => ''),
         readOptionalText(page, detail.location),
+        page.$$eval(detail.images, extractGalleryImages).catch(() => [] as string[]),
         this.extractSellerInfo(page),
       ]);
 
@@ -340,7 +345,11 @@ export abstract class BaseOlxScraper extends PlaywrightScraper<SearchFilters, Se
         title,
         price,
         location,
-        description,
+        description: description || undefined,
+        // The first gallery image doubles as the listing's thumbnail, matching
+        // the shape search results return.
+        imageUrl: images[0],
+        images: images.length > 0 ? images : undefined,
         url: finalUrl,
         seller,
       };

@@ -21,7 +21,9 @@ const COMMON_SELECTORS: DomainSelectors = {
     title: '[data-testid="offer_title"]',
     price: '[data-testid="ad-price-container"]',
     description: '[data-testid="ad_description"]',
-    images: '.swiper-slide img',
+    // Scoped to the ad's own gallery: a bare '.swiper-slide' also matches the
+    // related-ads carousels further down the page.
+    images: '[data-cy="adPhotos-swiperSlide"] img',
     location: '[data-testid="map-aside-section"]',
     publishDate: '[data-testid="ad-posted-at"]',
     seller: {

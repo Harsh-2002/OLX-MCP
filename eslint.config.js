@@ -24,6 +24,11 @@ export default [
         URL: 'readonly',
         URLSearchParams: 'readonly',
         AbortSignal: 'readonly',
+        // DOM globals: the scraper's extractors are typed against the document
+        // they are serialised into and evaluated in.
+        Element: 'readonly',
+        HTMLElement: 'readonly',
+        Document: 'readonly',
       },
     },
     plugins: {

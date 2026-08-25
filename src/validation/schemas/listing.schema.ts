@@ -35,7 +35,7 @@ export const GetListingDetailsArgsSchema = z.object({
       /^[A-Za-z0-9._-]+$/,
       'listingId may contain only letters, digits, dot, underscore, dash'
     ),
-  includeImages: z.boolean().default(false),
+  includeImages: z.boolean().default(true),
   includeSellerInfo: z.boolean().default(true),
 });
 
@@ -65,6 +65,7 @@ export const ListingSchema = z.object({
   location: z.string().optional(),
   category: z.string().optional(),
   imageUrl: z.string().url().optional(),
+  images: z.array(z.string().url()).optional(),
   url: z.string().url(),
   publishedAt: z.date().optional(),
   description: z.string().optional(),

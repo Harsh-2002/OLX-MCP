@@ -81,6 +81,7 @@ export interface Listing {
   readonly location?: string | undefined;
   readonly category?: string | undefined;
   readonly imageUrl?: string | undefined;
+  readonly images?: readonly string[] | undefined;
   readonly url: string;
   readonly publishedAt?: Date | undefined;
   readonly description?: string | undefined;
