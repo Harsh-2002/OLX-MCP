@@ -16,7 +16,10 @@
       "Bash(npm pack:*)",
       "Bash(gh run view:*)",
       "Bash(olx-mcp:*)",
-      "Bash(npm version:*)"
+      "Bash(npm version:*)",
+      "WebFetch(domain:mcpserverdirectory.com)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:mcpservers.org)"
     ],
     "deny": [],
     "ask": []
