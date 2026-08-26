@@ -102,7 +102,7 @@ async function testMultiDomainSupport() {
     try {
       scraperFactory.getScraper('olx.invalid');
       console.log('  ❌ Should have thrown error for invalid domain');
-    } catch (error) {
+    } catch {
       console.log('  ✅ Correctly rejected invalid domain');
     }
 
@@ -130,7 +130,7 @@ async function testSchemas() {
     );
 
     // Valid input
-    const validSearch = SearchListingsArgsSchema.parse({
+    SearchListingsArgsSchema.parse({
       domain: 'olx.pl',
       query: 'test',
     });
@@ -149,7 +149,7 @@ async function testSchemas() {
         query: 'test',
       });
       console.log('  ❌ Should have rejected invalid domain');
-    } catch (error) {
+    } catch {
       console.log('  ✅ Correctly rejected invalid domain');
     }
   } catch (error) {
