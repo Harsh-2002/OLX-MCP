@@ -36,7 +36,7 @@ Why search for e-waste in your area by yourself if Claude can do it for you?
 }
 ```
 
-3. **Restart Claude Desktop** to load the new configuration.
+1. **Restart Claude Desktop** to load the new configuration.
 
 ### 🔄 Alternative: Global Installation
 
@@ -47,6 +47,7 @@ npm install -g olx-mcp
 ```
 
 Then use this config:
+
 ```json
 {
   "mcpServers": {
@@ -67,6 +68,7 @@ npm run build
 ```
 
 Use this config for development:
+
 ```json
 {
   "mcpServers": {
@@ -95,6 +97,7 @@ Search for "telefon" in "warszawa" on OLX Poland with prices between 100-500 PLN
 ```
 
 **Parameters:**
+
 - `domain` (required): OLX domain ('olx.pt', 'olx.pl', 'olx.bg', 'olx.ro', 'olx.ua')
 - `query` (optional): Search term
 - `category` (optional): Category filter
@@ -118,6 +121,7 @@ Show me details for listing "XYZ789" from OLX Poland including images?
 ```
 
 **Parameters:**
+
 - `domain` (required): OLX domain ('olx.pt', 'olx.pl', 'olx.bg', 'olx.ro', 'olx.ua')
 - `listingId` (required): The ID of the listing
 - `includeImages` (default: true): Include the listing's gallery image URLs
@@ -132,6 +136,21 @@ Show me details for listing "XYZ789" from OLX Poland including images?
 - `npm start` - Run the built server
 - `npm test` - Run tests (when available)
 - `npm run clean` - Clean build artifacts
+
+### Releasing
+
+Releases are automated. Pushing a `v*` tag triggers `.github/workflows/release.yml`,
+which runs the full CI pipeline, publishes to npm (with provenance), and creates
+the GitHub Release:
+
+```bash
+npm version patch   # or minor/major; creates the version commit + v-tag
+git push origin main --follow-tags
+```
+
+Do **not** run `npm publish` manually — CI publishes on the tag push, so a local
+publish always fails with "cannot publish over previously published versions".
+Verify with `gh run list` (green "Release" run) and `gh release view vX.Y.Z`.
 
 ## Troubleshooting
 
