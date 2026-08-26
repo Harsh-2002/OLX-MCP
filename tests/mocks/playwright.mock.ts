@@ -91,34 +91,58 @@ export const setupOLXScrapingMocks = () => {
   // Mock page $$ method for listing cards
   mockPageInstance.$$.mockImplementation((selector: string) => {
     if (selector.includes('[data-cy="l-card"]')) {
-      return Promise.resolve(mockListingElements as unknown as ElementHandle[]);
+      return Promise.resolve(
+        mockListingElements as unknown as ElementHandle<SVGElement | HTMLElement>[]
+      );
     }
     return Promise.resolve([]);
   });
 
   // extractListings pulls every card in one $$eval, so the mock returns the
-  // already-extracted field values rather than element handles.
-  mockPageInstance.$$eval.mockImplementation((selector: string) => {
-    if (!selector.includes('[data-cy="l-card"]')) {
-      return Promise.resolve([]);
+  // already-extracted field values rather than element handles. The other two
+  // $$eval callsites get branches too: the detail gallery (so include/exclude
+  // behaviour is observable) and the listing-id fallback lookup, which must
+  // resolve to a single href string or '' — never to an array, which would be
+  // truthy and coerce into a garbage URL via new URL([], base).
+  mockPageInstance.$$eval.mockImplementation(
+    (selector: string, _pageFunction?: unknown, arg?: unknown) => {
+      if (selector.includes('[data-cy="l-card"]') && selector.includes('a[href]')) {
+        const needle = typeof arg === 'string' ? arg : '';
+        const fallbackListings: Record<string, string> = {
+          IDABC123: '/anuncios/iphone-13-pro-max-IDABC123.html',
+          IDDEF456: '/anuncios/samsung-galaxy-s21-IDDEF456.html',
+          IDXYZ789: '/anuncios/test-listing-IDXYZ789.html',
+          IDXyz123: '/anuncios/test-listing-IDXyz123.html',
+        };
+        return Promise.resolve(fallbackListings[needle] ?? '');
+      }
+      if (!selector.includes('[data-cy="l-card"]')) {
+        if (selector.includes('adPhotos-swiperSlide')) {
+          return Promise.resolve([
+            'https://example.com/gallery1.jpg',
+            'https://example.com/gallery2.jpg',
+          ]);
+        }
+        return Promise.resolve([]);
+      }
+      return Promise.resolve([
+        {
+          title: 'iPhone 13 Pro Max',
+          price: '800€',
+          location: 'Lisboa',
+          imageUrl: 'https://example.com/image1.jpg',
+          relativeUrl: '/anuncios/iphone-13-pro-max-ID123.html',
+        },
+        {
+          title: 'Samsung Galaxy S21',
+          price: '600€',
+          location: 'Porto',
+          imageUrl: 'https://example.com/image2.jpg',
+          relativeUrl: '/anuncios/samsung-galaxy-s21-ID456.html',
+        },
+      ]);
     }
-    return Promise.resolve([
-      {
-        title: 'iPhone 13 Pro Max',
-        price: '800€',
-        location: 'Lisboa',
-        imageUrl: 'https://example.com/image1.jpg',
-        relativeUrl: '/anuncios/iphone-13-pro-max-ID123.html',
-      },
-      {
-        title: 'Samsung Galaxy S21',
-        price: '600€',
-        location: 'Porto',
-        imageUrl: 'https://example.com/image2.jpg',
-        relativeUrl: '/anuncios/samsung-galaxy-s21-ID456.html',
-      },
-    ]);
-  });
+  );
 
   // Mock page $eval for pagination and counts
   mockPageInstance.$eval.mockImplementation((selector: string) => {
@@ -146,16 +170,16 @@ export const setupOLXScrapingMocks = () => {
   // Mock page $ method for single element selection
   mockPageInstance.$.mockImplementation((selector: string) => {
     if (selector.includes('[data-testid="pagination-forward"]')) {
-      return Promise.resolve(createMockElementHandle() as unknown as ElementHandle);
+      return Promise.resolve(createMockElementHandle() as unknown as ElementHandle<HTMLElement>);
     }
     if (selector.includes('[data-testid="trader-title"]')) {
-      return Promise.resolve(createMockElementHandle() as unknown as ElementHandle);
+      return Promise.resolve(createMockElementHandle() as unknown as ElementHandle<HTMLElement>);
     }
     return Promise.resolve(null);
   });
 
   // Mock page.goto for different scenarios
-  mockPageInstance.goto.mockImplementation((url: string) => {
+  mockPageInstance.goto.mockImplementation((_url: string) => {
     // Mock successful navigation
     return Promise.resolve(undefined as any);
   });
@@ -196,7 +220,16 @@ export const setupEmptySearchMocks = () => {
   }
 
   mockPageInstance.$$.mockResolvedValue([]);
-  mockPageInstance.$$eval.mockResolvedValue([]);
+  // Emulate Playwright's contract: the resolved value is the page function's
+  // RETURN value, not the element list. Search extraction returns an array of
+  // card objects, while the listing-id lookup returns a single string — so
+  // "no anchors" must resolve to '' there or the scraper sees a truthy array.
+  mockPageInstance.$$eval.mockImplementation((selector: string) => {
+    if (selector.includes('a[href]')) {
+      return Promise.resolve('');
+    }
+    return Promise.resolve([]);
+  });
   mockPageInstance.$eval.mockResolvedValue(0);
   mockPageInstance.$.mockResolvedValue(null);
 };

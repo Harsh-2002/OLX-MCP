@@ -169,6 +169,78 @@ describe('OLXPTScraper', () => {
       expect(result.data.location).toBe('Lisboa, Região de Lisboa');
     });
 
+    it('should return gallery images by default', async () => {
+      const listingId = 'ABC123' as ListingId;
+      const result = await scraper.getListingDetails(listingId);
+
+      assertIsSuccess(result);
+      expect(result.data.images).toEqual([
+        'https://example.com/gallery1.jpg',
+        'https://example.com/gallery2.jpg',
+      ]);
+      // The first gallery image doubles as the thumbnail.
+      expect(result.data.imageUrl).toBe('https://example.com/gallery1.jpg');
+    });
+
+    it('should skip image extraction when includeImages is false', async () => {
+      const { mockPage } = setupOLXScrapingMocks();
+      const listingId = 'ABC123' as ListingId;
+
+      const result = await scraper.getListingDetails(listingId, undefined, {
+        includeImages: false,
+      });
+
+      assertIsSuccess(result);
+      // Opted-out parts stay absent rather than empty.
+      expect(result.data.images).toBeUndefined();
+      expect(result.data.imageUrl).toBeUndefined();
+      expect(result.data.seller).toBeDefined();
+      // The gallery was never queried.
+      const galleryQueries = mockPage.$$eval.mock.calls.filter(([selector]) =>
+        String(selector).includes('adPhotos-swiperSlide')
+      );
+      expect(galleryQueries).toHaveLength(0);
+    });
+
+    it('should skip seller extraction when includeSellerInfo is false', async () => {
+      const { mockPage } = setupOLXScrapingMocks();
+      const listingId = 'ABC123' as ListingId;
+
+      const result = await scraper.getListingDetails(listingId, undefined, {
+        includeSellerInfo: false,
+      });
+
+      assertIsSuccess(result);
+      expect(result.data.seller).toBeUndefined();
+      expect(result.data.images).toBeDefined();
+      // Neither the seller name ($eval) nor the verified badge ($) was queried.
+      const sellerNameQueries = mockPage.$eval.mock.calls.filter(([selector]) =>
+        String(selector).includes('user-profile-user-name')
+      );
+      const sellerVerifiedQueries = mockPage.$.mock.calls.filter(([selector]) =>
+        String(selector).includes('trader-title')
+      );
+      expect(sellerNameQueries).toHaveLength(0);
+      expect(sellerVerifiedQueries).toHaveLength(0);
+    });
+
+    it('should skip both optional parts when both flags are false', async () => {
+      const listingId = 'ABC123' as ListingId;
+
+      const result = await scraper.getListingDetails(listingId, undefined, {
+        includeImages: false,
+        includeSellerInfo: false,
+      });
+
+      assertIsSuccess(result);
+      expect(result.data.images).toBeUndefined();
+      expect(result.data.imageUrl).toBeUndefined();
+      expect(result.data.seller).toBeUndefined();
+      // Required parts are still extracted.
+      expect(result.data.title).toBe('iPhone 13 Pro Max - Detailed');
+      expect(result.data.description).toBe('Excellent condition iPhone 13 Pro Max');
+    });
+
     it('should extract seller information', async () => {
       const listingId = 'DEF456' as ListingId;
       const result = await scraper.getListingDetails(listingId);
@@ -184,12 +256,16 @@ describe('OLXPTScraper', () => {
       await scraper.getListingDetails(listingId);
 
       const calls = verifyPlaywrightCalls();
-      expect(calls.gotoCalledWith).toHaveLength(1);
+      // Two navigations happen for an uncached id: the fallback search
+      // lookup, then the listing page itself.
+      expect(calls.gotoCalledWith).toHaveLength(2);
 
       const [gotoCall] = calls.gotoCalledWith;
       const url = gotoCall![0] as string;
+      expect(url).toContain('q-XYZ789');
 
-      expect(url).toBe('https://www.olx.pt/anuncios/IDXYZ789.html');
+      const [listingCall] = calls.gotoCalledWith[1]!;
+      expect(listingCall).toBe('https://www.olx.pt/anuncios/test-listing-IDXYZ789.html');
     });
   });
 
@@ -234,6 +310,7 @@ describe('OLXPTScraper', () => {
 
       // Mock selectors to return null/undefined
       mockPage.$$.mockResolvedValue([]);
+      mockPage.$$eval.mockResolvedValue([]);
       mockPage.$eval.mockRejectedValue(new Error('Element not found'));
 
       const filters = createMockSearchFilters();
@@ -295,12 +372,12 @@ describe('OLXPTScraper', () => {
     });
 
     it('should handle all sort options', async () => {
-      setupOLXScrapingMocks();
       const sortOptions = ['date', 'price-asc', 'price-desc', 'relevance'] as const;
 
       for (const sortBy of sortOptions) {
         resetPlaywrightMocks();
-        createPlaywrightMocks();
+        const { browser } = createPlaywrightMocks();
+        scraper = new OLXPTScraper(browser);
         setupOLXScrapingMocks();
 
         const filters = createMockSearchFilters({ sortBy });

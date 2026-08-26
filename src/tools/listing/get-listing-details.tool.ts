@@ -20,19 +20,17 @@ export class GetListingDetailsTool extends BaseTool<GetListingDetailsArgs, Listi
     const scraper = this.scraperFactory.getScraper(args.domain);
     const listingId = args.listingId as ListingId;
 
-    const result = await scraper.getListingDetails(listingId, signal);
+    // The scraper skips the corresponding DOM work entirely for disabled
+    // parts, so nothing needs stripping here.
+    const result = await scraper.getListingDetails(listingId, signal, {
+      includeImages: args.includeImages,
+      includeSellerInfo: args.includeSellerInfo,
+    });
 
     if (!result.success) {
       throw result.error;
     }
 
-    if (args.includeImages) {
-      return result.data;
-    }
-
-    // Callers that opted out of image URLs get neither the gallery nor the
-    // thumbnail taken from it.
-    const { images: _images, imageUrl: _imageUrl, ...withoutImages } = result.data;
-    return withoutImages;
+    return result.data;
   }
 }

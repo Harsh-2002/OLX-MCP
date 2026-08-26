@@ -62,8 +62,11 @@ describe('GetListingDetailsTool', () => {
       expect(result.data.description).toBe('Excellent condition iPhone');
       expect(result.data.price).toBe('800€');
 
-      // Verify scraper was called with correct ID
-      expect(mockScraper.getListingDetails).toHaveBeenCalledWith('ABC123', undefined);
+      // Verify scraper was called with schema defaults applied
+      expect(mockScraper.getListingDetails).toHaveBeenCalledWith('ABC123', undefined, {
+        includeImages: true,
+        includeSellerInfo: true,
+      });
     });
 
     it('should handle all input arguments', async () => {
@@ -79,7 +82,11 @@ describe('GetListingDetailsTool', () => {
 
       assertIsSuccess(result);
       expect(mockScraperFactory.getScraper).toHaveBeenCalledWith('olx.pl');
-      expect(mockScraper.getListingDetails).toHaveBeenCalledWith('XYZ789', undefined);
+      // Both flags are forwarded verbatim to the scraper
+      expect(mockScraper.getListingDetails).toHaveBeenCalledWith('XYZ789', undefined, {
+        includeImages: true,
+        includeSellerInfo: false,
+      });
     });
 
     it('should use default values for optional parameters', async () => {
@@ -89,13 +96,15 @@ describe('GetListingDetailsTool', () => {
       const result = await detailsTool.execute({
         domain: 'olx.pt',
         listingId: 'DEF456',
-        // includeImages defaults to false
+        // includeImages defaults to true
         // includeSellerInfo defaults to true
       });
 
       assertIsSuccess(result);
-      // Note: The current implementation doesn't use these flags,
-      // but the schema validation should still work
+      expect(mockScraper.getListingDetails).toHaveBeenCalledWith('DEF456', undefined, {
+        includeImages: true,
+        includeSellerInfo: true,
+      });
     });
 
     it('should return complete listing information', async () => {
@@ -143,7 +152,10 @@ describe('GetListingDetailsTool', () => {
 
       await detailsTool.execute({ domain: 'olx.pt', listingId: 'TEST123' }, abortSignal);
 
-      expect(mockScraper.getListingDetails).toHaveBeenCalledWith('TEST123', abortSignal);
+      expect(mockScraper.getListingDetails).toHaveBeenCalledWith('TEST123', abortSignal, {
+        includeImages: true,
+        includeSellerInfo: true,
+      });
     });
 
     it('should handle pre-aborted signal', async () => {
@@ -298,7 +310,10 @@ describe('GetListingDetailsTool', () => {
         const result = await detailsTool.execute({ domain: 'olx.pt', listingId });
 
         assertIsSuccess(result);
-        expect(mockScraper.getListingDetails).toHaveBeenCalledWith(listingId, undefined);
+        expect(mockScraper.getListingDetails).toHaveBeenCalledWith(listingId, undefined, {
+          includeImages: true,
+          includeSellerInfo: true,
+        });
       }
     });
   });
@@ -425,8 +440,14 @@ describe('GetListingDetailsTool', () => {
       assertIsSuccess(result2);
 
       expect(mockScraper.getListingDetails).toHaveBeenCalledTimes(2);
-      expect(mockScraper.getListingDetails).toHaveBeenCalledWith('FIRST123', undefined);
-      expect(mockScraper.getListingDetails).toHaveBeenCalledWith('SECOND123', undefined);
+      expect(mockScraper.getListingDetails).toHaveBeenNthCalledWith(1, 'FIRST123', undefined, {
+        includeImages: true,
+        includeSellerInfo: true,
+      });
+      expect(mockScraper.getListingDetails).toHaveBeenNthCalledWith(2, 'SECOND123', undefined, {
+        includeImages: true,
+        includeSellerInfo: true,
+      });
     });
   });
 });

@@ -10,6 +10,7 @@ import {
   ListingId,
   OlxDomain,
   DomainConfig,
+  ListingDetailsOptions,
 } from '../../core/types.js';
 import { getDomainConfig } from './domain-config.js';
 import { extractDescriptionText, extractGalleryImages } from './dom-extractors.js';
@@ -287,10 +288,16 @@ export abstract class BaseOlxScraper extends PlaywrightScraper<SearchFilters, Se
     return `u${(digest >>> 0).toString(36)}` as ListingId;
   }
 
-  async getListingDetails(listingId: ListingId, signal?: AbortSignal): Promise<Result<Listing>> {
+  async getListingDetails(
+    listingId: ListingId,
+    signal?: AbortSignal,
+    options: ListingDetailsOptions = {}
+  ): Promise<Result<Listing>> {
     try {
+      // options is captured by this closure, so every retry attempt re-applies
+      // the same skip/include decisions.
       const result = await this.retryOperation(() =>
-        this.performGetListingDetails(listingId, signal)
+        this.performGetListingDetails(listingId, signal, options)
       );
       return createResult(result);
     } catch (error) {
@@ -300,7 +307,8 @@ export abstract class BaseOlxScraper extends PlaywrightScraper<SearchFilters, Se
 
   private async performGetListingDetails(
     listingId: ListingId,
-    signal?: AbortSignal
+    signal?: AbortSignal,
+    options: ListingDetailsOptions = {}
   ): Promise<Listing> {
     return await this.withPage(async page => {
       let finalUrl = '';
@@ -328,6 +336,10 @@ export abstract class BaseOlxScraper extends PlaywrightScraper<SearchFilters, Se
       }
 
       const detail = this.domainConfig.selectors.detail;
+      // Absent flags mean "include", matching the MCP tool schema defaults;
+      // normalization happens once here so the branches below stay uniform.
+      const includeImages = options.includeImages ?? true;
+      const includeSellerInfo = options.includeSellerInfo ?? true;
       const [title, price, description, location, images, seller] = await Promise.all([
         readText(page, detail.title),
         readOptionalText(page, detail.price),
@@ -336,8 +348,10 @@ export abstract class BaseOlxScraper extends PlaywrightScraper<SearchFilters, Se
         // container's own textContent would prepend to every description.
         page.$eval(detail.description, extractDescriptionText).catch(() => ''),
         readOptionalText(page, detail.location),
-        page.$$eval(detail.images, extractGalleryImages).catch(() => [] as string[]),
-        this.extractSellerInfo(page),
+        includeImages
+          ? page.$$eval(detail.images, extractGalleryImages).catch(() => [] as string[])
+          : Promise.resolve([] as string[]),
+        includeSellerInfo ? this.extractSellerInfo(page) : Promise.resolve(undefined),
       ]);
 
       return {
@@ -347,9 +361,10 @@ export abstract class BaseOlxScraper extends PlaywrightScraper<SearchFilters, Se
         location,
         description: description || undefined,
         // The first gallery image doubles as the listing's thumbnail, matching
-        // the shape search results return.
-        imageUrl: images[0],
-        images: images.length > 0 ? images : undefined,
+        // the shape search results return. Skipped parts stay absent rather
+        // than empty so callers can tell "opted out" from "none found".
+        imageUrl: includeImages ? images[0] : undefined,
+        images: includeImages && images.length > 0 ? images : undefined,
         url: finalUrl,
         seller,
       };

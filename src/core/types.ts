@@ -107,6 +107,16 @@ export interface SearchFilters {
   readonly sortBy?: 'relevance' | 'date' | 'price-asc' | 'price-desc' | undefined;
 }
 
+/**
+ * Which optional parts of a listing detail page to extract.
+ * `false` skips the corresponding DOM work entirely; any other value
+ * (including omitted) includes it, matching the MCP tool schema defaults.
+ */
+export interface ListingDetailsOptions {
+  readonly includeImages?: boolean | undefined;
+  readonly includeSellerInfo?: boolean | undefined;
+}
+
 export interface Category {
   readonly id: CategoryId;
   readonly name: string;
