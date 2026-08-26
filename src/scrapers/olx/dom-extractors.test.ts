@@ -1,6 +1,11 @@
 import { describe, it, expect } from 'vitest';
 
-import { extractDescriptionText, extractGalleryImages } from './dom-extractors.js';
+import {
+  extractDescriptionText,
+  extractDetailPriceText,
+  extractGalleryImages,
+  extractLocationText,
+} from './dom-extractors.js';
 
 /**
  * The extractors run against real DOM nodes in the browser, so the fixtures
@@ -62,6 +67,104 @@ describe('extractDescriptionText', () => {
 
   it('returns an empty string for an empty container', () => {
     expect(extractDescriptionText(element('DIV', '   '))).toBe('');
+  });
+});
+
+describe('extractDetailPriceText', () => {
+  /** The detail-page price container: an amount element plus a badge sibling. */
+  const priceContainer = (amountText: string | null, badgeText?: string): Element =>
+    ({
+      tagName: 'DIV',
+      textContent: (amountText || '') + (badgeText ? badgeText : ''),
+      childNodes: [
+        ...(amountText !== null
+          ? [
+              {
+                nodeType: 1,
+                textContent: amountText,
+              },
+            ]
+          : [{ nodeType: 3, textContent: '340 €' }]),
+        ...(badgeText ? [{ nodeType: 1, textContent: badgeText }] : []),
+      ],
+      querySelector: (selector: string) =>
+        selector === '[data-testid="ad-price"]' && amountText !== null
+          ? ({ tagName: 'H3', textContent: amountText } as unknown as Element)
+          : null,
+    }) as unknown as Element;
+
+  it('reads only the amount element, not the negotiable badge next to it', () => {
+    // Real markup: <div data-testid="ad-price-container"><h3 data-testid="ad-price">340 €</h3><p>Negociável</p></div>
+    const container = priceContainer('340 €', 'Negociável');
+
+    expect(extractDetailPriceText(container)).toBe('340 €');
+  });
+
+  it('is language-independent — the badge wording never reaches the value', () => {
+    expect(extractDetailPriceText(priceContainer('2 400 zł', 'do negocjacji'))).toBe('2 400 zł');
+    expect(extractDetailPriceText(priceContainer('100 lei', 'Negociabil'))).toBe('100 lei');
+  });
+
+  it('falls back to direct text nodes when the amount element is missing', () => {
+    // Markup changed shape: the container holds the amount as a bare text node
+    // plus a badge element. Direct-text-node reading still skips the badge.
+    const container = priceContainer(null, 'Negociável');
+
+    expect(extractDetailPriceText(container)).toBe('340 €');
+  });
+});
+
+describe('extractLocationText', () => {
+  it('reads the address block, not the localised heading glued onto it', () => {
+    // Real markup: <div data-testid="map-aside-section"><h2>Localização</h2><address><p>Massamá e Monte Abraão, Lisboa</p></address>…</div>
+    const address = element('ADDRESS', '', [element('P', 'Massamá E Monte Abraão, Lisboa')]);
+    const container = {
+      tagName: 'DIV',
+      children: [element('H2', 'Localização'), address],
+      querySelector: (selector: string) =>
+        selector === 'address' ? (address as unknown as Element) : null,
+    } as unknown as Element;
+
+    expect(extractLocationText(container)).toBe('Massamá E Monte Abraão, Lisboa');
+  });
+
+  it('drops the heading whatever language the domain renders it in', () => {
+    const build = (heading: string) =>
+      ({
+        tagName: 'DIV',
+        children: [element('H2', heading), element('ADDRESS', 'Centrum, Warszawa')],
+        querySelector: () => null,
+      }) as unknown as Element;
+
+    // No <address> lookup match forces the heading-drop fallback path.
+    expect(extractLocationText(build('Localização'))).toContain('Centrum, Warszawa');
+    expect(extractLocationText(build('Lokalizacja'))).toContain('Centrum, Warszawa');
+  });
+
+  it('falls back to the non-heading children joined by newlines', () => {
+    const container = {
+      tagName: 'DIV',
+      children: [
+        element('H2', 'Lokalizacja'),
+        element('DIV', 'Warszawa'),
+        element('DIV', 'Mokotów'),
+      ],
+      textContent: 'LokalizacjaWarszawaMokotów',
+      querySelector: () => null,
+    } as unknown as Element;
+
+    expect(extractLocationText(container)).toBe('Warszawa\nMokotów');
+  });
+
+  it('uses the container text when there are no child elements at all', () => {
+    const container = {
+      tagName: 'DIV',
+      children: [],
+      textContent: 'Plain location text.',
+      querySelector: () => null,
+    } as unknown as Element;
+
+    expect(extractLocationText(container)).toBe('Plain location text.');
   });
 });
 
