@@ -18,7 +18,6 @@ Why search for e-waste in your area by yourself if Claude can do it for you?
 ### 📋 Claude Desktop Configuration
 
 1. **Locate your Claude Desktop config file:**
-
    - **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
    - **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
    - **Linux**: `~/.config/Claude/claude_desktop_config.json`
