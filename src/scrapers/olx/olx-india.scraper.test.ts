@@ -83,11 +83,11 @@ describe('OLXIndiaScraper', () => {
         if (selector.includes('li[data-aut-id^="itemBox"]')) {
           return Promise.resolve([
             {
-              title: 'Geekom A8 mini PC',
-              price: '₹ 80,000',
-              location: 'Lower Parel, Mumbai',
-              imageUrl: 'https://apollo.olx.in/geekom.webp',
-              relativeUrl: '/item/geekom-a8-mini-pc-iid-1853073756',
+              title: 'Sample Mini PC',
+              price: '₹ 10,000',
+              location: 'Example Area, Mumbai',
+              imageUrl: 'https://example.com/mini-pc.webp',
+              relativeUrl: '/item/sample-mini-pc-iid-1234567890',
             },
           ]);
         }
@@ -113,11 +113,11 @@ describe('OLXIndiaScraper', () => {
     expect(result.data.totalCount).toBe(4);
     expect(result.data.listings).toEqual([
       expect.objectContaining({
-        id: '1853073756',
-        title: 'Geekom A8 mini PC',
-        price: '₹ 80,000',
-        location: 'Lower Parel, Mumbai',
-        url: 'https://www.olx.in/item/geekom-a8-mini-pc-iid-1853073756',
+        id: '1234567890',
+        title: 'Sample Mini PC',
+        price: '₹ 10,000',
+        location: 'Example Area, Mumbai',
+        url: 'https://www.olx.in/item/sample-mini-pc-iid-1234567890',
       }),
     ]);
   });
@@ -125,24 +125,20 @@ describe('OLXIndiaScraper', () => {
   it('extracts IDs from India iid listing URLs', () => {
     const extractListingId = (scraper as any).extractListingId.bind(scraper);
 
-    expect(extractListingId('/item/mobile-phones-c1453-used-iphone-iid-1852255700')).toBe(
-      '1852255700'
-    );
-    expect(extractListingId('/item/mobile-phones-c1453-used-iphone-iid-1852255700?foo=bar')).toBe(
-      '1852255700'
-    );
+    expect(extractListingId('/item/sample-listing-iid-1234567890')).toBe('1234567890');
+    expect(extractListingId('/item/sample-listing-iid-1234567890?foo=bar')).toBe('1234567890');
   });
 
   it("uses OLX India's direct numeric item route when resolving an uncached listing ID", async () => {
     const { mockPage } = setupOLXScrapingMocks();
-    const listingId = '1852255700' as ListingId;
+    const listingId = '1234567890' as ListingId;
 
     const result = await scraper.getListingDetails(listingId);
 
     assertIsSuccess(result);
     const calls = verifyPlaywrightCalls();
     expect(calls.gotoCalledWith).toHaveLength(1);
-    expect(calls.gotoCalledWith[0]![0]).toBe('https://www.olx.in/item/1852255700');
+    expect(calls.gotoCalledWith[0]![0]).toBe('https://www.olx.in/item/1234567890');
     expect(calls.gotoCalledWith[0]![1]).toMatchObject({ waitUntil: 'domcontentloaded' });
     expect(mockPage.$$eval).not.toHaveBeenCalledWith(
       expect.stringContaining('a[href]'),
