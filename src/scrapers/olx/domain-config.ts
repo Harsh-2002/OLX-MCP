@@ -38,6 +38,37 @@ const COMMON_SELECTORS: DomainSelectors = {
   },
 };
 
+/** OLX India still exposes its legacy data-aut-id markup rather than the shared test-id markup. */
+const INDIA_SELECTORS: DomainSelectors = {
+  search: {
+    listingCard: 'li[data-aut-id^="itemBox"]',
+    title: '[data-aut-id="itemTitle"]',
+    price: '[data-aut-id="itemPrice"]',
+    location: '[data-aut-id="item-location"]',
+    image: '[data-aut-id="itemImage"] img',
+    link: 'a[href*="/item/"][href*="iid-"]',
+    publishDate: '[data-aut-id="itemDate"]',
+    nextPage: 'a[data-aut-id="arrowRight"]',
+    totalCount: '[data-aut-id="searchTextPage"] + span',
+  },
+  detail: {
+    title: 'h1[data-aut-id="itemTitle"]',
+    price: '[data-aut-id="itemPrice"]',
+    description: '[data-aut-id="itemDescriptionContent"]',
+    images: 'figure[data-aut-id="defaultImg"] img',
+    location: '[data-aut-id="itemLocation"]',
+    publishDate: '[data-aut-id="itemCreationDate"]',
+    seller: {
+      name: '[data-aut-id="userTitle"] > span:last-child',
+      phone: '[data-aut-id="phone"]',
+      verified: '[data-aut-id="businessTag"]',
+      memberSince: '[data-aut-id="memberSince"]',
+    },
+    category: '[data-aut-id="breadcrumb"] li:last-child',
+    attributes: '[data-aut-id="itemAttributes"] li',
+  },
+};
+
 /** Ordered replacements folding a language's diacritics down to ASCII. */
 type DiacriticFolding = ReadonlyArray<readonly [RegExp, string]>;
 
@@ -174,7 +205,7 @@ export const OLX_DOMAIN_CONFIGS: Record<OlxDomain, DomainConfig> = {
     baseUrl: 'https://www.olx.in',
     currency: 'INR',
     language: 'en',
-    selectors: COMMON_SELECTORS,
+    selectors: INDIA_SELECTORS,
     urlPatterns: { searchPath: buildIndiaSearchPath, ...COMMON_URL_PARAMS },
   },
 };

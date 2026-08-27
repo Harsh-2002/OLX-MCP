@@ -61,7 +61,7 @@ export abstract class BaseOlxScraper extends PlaywrightScraper<SearchFilters, Se
     return await this.withPage(async page => {
       const searchUrl = this.buildSearchUrl(filters);
 
-      await page.goto(searchUrl, { waitUntil: 'networkidle' });
+      await page.goto(searchUrl, { waitUntil: this.getNavigationWaitUntil() });
       await this.waitForSearchResults(page);
 
       if (signal?.aborted) {
@@ -136,13 +136,21 @@ export abstract class BaseOlxScraper extends PlaywrightScraper<SearchFilters, Se
     return url.toString();
   }
 
+  /** India keeps analytics connections open, so it must not wait for network idle. */
+  protected getNavigationWaitUntil(): 'networkidle' | 'domcontentloaded' {
+    return 'networkidle';
+  }
+
+  /** A domain may use a summary element as its ready signal when there are no cards. */
+  protected getSearchReadySelector(): string {
+    return this.domainConfig.selectors.search.listingCard;
+  }
+
   private async waitForSearchResults(page: Page): Promise<void> {
     // Racing this against an empty-state selector left the losing wait pending
     // and rejecting unobserved. Cards never appearing is not an error here —
     // extractListings is what distinguishes an empty page from a broken one.
-    await page
-      .waitForSelector(this.domainConfig.selectors.search.listingCard, { timeout: 10000 })
-      .catch(() => {});
+    await page.waitForSelector(this.getSearchReadySelector(), { timeout: 10000 }).catch(() => {});
   }
 
   private async extractListings(
@@ -328,8 +336,9 @@ export abstract class BaseOlxScraper extends PlaywrightScraper<SearchFilters, Se
       if (cachedUrl) {
         finalUrl = cachedUrl;
       } else {
-        // If not cached, try to find the listing through search
-        finalUrl = await this.findListingUrl(listingId, page);
+        // Some domains expose a stable direct listing route; others need search.
+        finalUrl =
+          this.getDirectListingUrl(listingId) || (await this.findListingUrl(listingId, page));
       }
 
       if (!finalUrl) {
@@ -339,7 +348,8 @@ export abstract class BaseOlxScraper extends PlaywrightScraper<SearchFilters, Se
       }
 
       // Navigate to the listing page
-      await page.goto(finalUrl, { waitUntil: 'networkidle' });
+      await page.goto(finalUrl, { waitUntil: this.getNavigationWaitUntil() });
+      await this.waitForListingDetails(page);
 
       if (signal?.aborted) {
         throw new Error('Operation cancelled');
@@ -350,6 +360,11 @@ export abstract class BaseOlxScraper extends PlaywrightScraper<SearchFilters, Se
       // normalization happens once here so the branches below stay uniform.
       const includeImages = options.includeImages ?? true;
       const includeSellerInfo = options.includeSellerInfo ?? true;
+
+      if (includeImages && this.shouldWaitForImages()) {
+        await page.waitForSelector(detail.images, { timeout: 10000 }).catch(() => {});
+      }
+
       const [title, price, description, location, images, seller] = await Promise.all([
         readText(page, detail.title),
         // Read through the extractor rather than readOptionalText: the price
@@ -400,7 +415,7 @@ export abstract class BaseOlxScraper extends PlaywrightScraper<SearchFilters, Se
 
     try {
       await page.goto(`${this.domainConfig.baseUrl}${listingPath}q-${safeId}/`, {
-        waitUntil: 'networkidle',
+        waitUntil: this.getNavigationWaitUntil(),
         timeout: 15000,
       });
 
@@ -421,6 +436,27 @@ export abstract class BaseOlxScraper extends PlaywrightScraper<SearchFilters, Se
     }
 
     return '';
+  }
+
+  /** Domains with numeric item endpoints can avoid the fragile search-by-ID fallback. */
+  protected getDirectListingUrl(_listingId: ListingId): string | undefined {
+    return undefined;
+  }
+
+  /** Most OLX domains render galleries with the page; India adds one after the title. */
+  protected shouldWaitForImages(): boolean {
+    return false;
+  }
+
+  private async waitForListingDetails(page: Page): Promise<void> {
+    try {
+      await page.waitForSelector(this.domainConfig.selectors.detail.title, { timeout: 10000 });
+    } catch {
+      throw new NonRetryableError(
+        `Could not find listing details on ${this.domainConfig.domain} using ` +
+          `"${this.domainConfig.selectors.detail.title}".`
+      );
+    }
   }
 
   private async extractSellerInfo(page: Page) {

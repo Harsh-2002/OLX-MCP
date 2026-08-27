@@ -19,4 +19,21 @@ export class OLXIndiaScraper extends BaseOlxScraper {
   protected override getListingIdSearchTerm(listingId: ListingId): string {
     return `iid-${listingId}`;
   }
+
+  protected override getNavigationWaitUntil(): 'domcontentloaded' {
+    return 'domcontentloaded';
+  }
+
+  protected override getSearchReadySelector(): string {
+    const search = this.domainConfig.selectors.search;
+    return `${search.listingCard}, ${search.totalCount}`;
+  }
+
+  protected override getDirectListingUrl(listingId: ListingId): string {
+    return `${this.domainConfig.baseUrl}/item/${encodeURIComponent(listingId)}`;
+  }
+
+  protected override shouldWaitForImages(): boolean {
+    return true;
+  }
 }

@@ -38,7 +38,7 @@
     "test:working": "vitest --run --exclude \"**/server.test.ts\" --exclude \"**/olx-pt.scraper.test.ts\" --exclude \"**/olx-pl.scraper.test.ts\"",
     "test:coverage:working": "vitest --run --coverage --exclude \"**/server.test.ts\" --exclude \"**/olx-pt.scraper.test.ts\" --exclude \"**/olx-pl.scraper.test.ts\"",
     "prepare": "husky install",
-    "postinstall": "playwright install chromium --with-deps || echo 'Playwright browsers will be installed on first use'",
+    "postinstall": "playwright install --with-deps chromium chromium-headless-shell || echo 'Playwright browsers will be installed on first use'",
     "prepublishOnly": "npm run ci",
     "postpack": "echo '✅ Package created successfully! Install with: npm install -g olx-mcp'"
   },
