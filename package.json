@@ -52,14 +52,15 @@
     "marketplace",
     "europe",
     "portugal",
-    "poland"
+    "poland",
+    "india"
   ],
   "publishConfig": {
     "access": "public"
   },
   "author": "Łukasz Margiela",
   "license": "MIT",
-  "description": "OLX MCP server that enables Claude Desktop to browse and search OLX listings across multiple domains (PT, PL, BG, RO, UA)",
+  "description": "OLX MCP server that enables Claude Desktop to browse and search OLX listings across multiple domains (PT, PL, BG, RO, UA, IN)",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/l-margiela/olx-mcp.git"

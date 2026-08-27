@@ -7,7 +7,7 @@ export type Brand<T, K> = T & { readonly __brand: K };
 export type ListingId = Brand<string, 'ListingId'>;
 export type CategoryId = Brand<string, 'CategoryId'>;
 export type LocationId = Brand<string, 'LocationId'>;
-export type OlxDomain = 'olx.pt' | 'olx.pl' | 'olx.bg' | 'olx.ro' | 'olx.ua';
+export type OlxDomain = 'olx.pt' | 'olx.pl' | 'olx.bg' | 'olx.ro' | 'olx.ua' | 'olx.in';
 
 export interface MCPTool<TArgs = unknown, TResult = unknown> {
   readonly name: string;

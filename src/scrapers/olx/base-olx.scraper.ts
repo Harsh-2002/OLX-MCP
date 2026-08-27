@@ -280,7 +280,7 @@ export abstract class BaseOlxScraper extends PlaywrightScraper<SearchFilters, Se
     };
   }
 
-  /** Every domain encodes the id the same way: .../slug-ID<id>.html */
+  /** European OLX domains encode the id as .../slug-ID<id>.html. */
   protected extractListingId(url: string): ListingId {
     const match = url.match(/ID([A-Za-z0-9]+)\.html/);
     if (match?.[1]) return match[1] as ListingId;
@@ -291,6 +291,11 @@ export abstract class BaseOlxScraper extends PlaywrightScraper<SearchFilters, Se
     // they would then overwrite each other in the URL cache.
     const digest = Array.from(url).reduce((hash, char) => (hash * 31 + char.charCodeAt(0)) | 0, 7);
     return `u${(digest >>> 0).toString(36)}` as ListingId;
+  }
+
+  /** Search marker used when resolving a detail request that was not cached. */
+  protected getListingIdSearchTerm(listingId: ListingId): string {
+    return `ID${listingId}`;
   }
 
   async getListingDetails(
@@ -404,7 +409,7 @@ export abstract class BaseOlxScraper extends PlaywrightScraper<SearchFilters, Se
           `${this.domainConfig.selectors.search.listingCard} a[href]`,
           (anchors, needle) =>
             anchors.map(a => a.getAttribute('href') || '').find(h => h.includes(needle)) || '',
-          `ID${listingId}`
+          this.getListingIdSearchTerm(listingId)
         )
         .catch(() => '');
 

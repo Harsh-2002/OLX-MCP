@@ -11,7 +11,7 @@
  * heading — "Opis", "Descrição", "Descriere". Reading the container's
  * textContent prefixed that heading onto every description, so the heading
  * elements are dropped and only the body blocks are read. Matching on the tag
- * rather than the words keeps this working on all five domains.
+ * rather than the words keeps this working across all supported domains.
  */
 export const extractDescriptionText = (container: Element): string => {
   const body = Array.from(container.children).filter(child => !/^H[1-6]$/.test(child.tagName));

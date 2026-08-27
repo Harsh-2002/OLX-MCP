@@ -3,6 +3,7 @@ import { OlxDomain } from '../../core/types.js';
 import { BaseOlxScraper } from './base-olx.scraper.js';
 import { OLXPTScraper } from './olx-pt.scraper.js';
 import { OLXPLScraper } from './olx-pl.scraper.js';
+import { OLXIndiaScraper } from './olx-india.scraper.js';
 
 export class OlxScraperFactory {
   private readonly scrapers = new Map<OlxDomain, BaseOlxScraper>();
@@ -35,6 +36,9 @@ export class OlxScraperFactory {
         break;
       case 'olx.ua':
         scraper = new GenericOlxScraper('olx.ua', this.browser);
+        break;
+      case 'olx.in':
+        scraper = new OLXIndiaScraper(this.browser);
         break;
       default:
         throw new Error(`Unsupported OLX domain: ${domain}`);

@@ -1,9 +1,10 @@
 import { DomainConfig, DomainSelectors, OlxDomain } from '../../core/types.js';
+import { resolveOlxIndiaLocation } from './olx-india-locations.js';
 
 /**
  * Every OLX country site is the same application with a different locale, so
- * the markup — and therefore every selector — is identical across domains.
- * Keeping one copy means a selector change is one edit, not five.
+ * the markup — and therefore every selector — is identical across supported
+ * domains. Keeping one copy means a selector change is one edit, not six.
  */
 const COMMON_SELECTORS: DomainSelectors = {
   search: {
@@ -100,6 +101,13 @@ const buildSearchPath =
     return query ? `${listingPath}q-${slugifyQuery(query, folding)}/` : listingPath;
   };
 
+/** OLX India puts the /items segment after an optional location slug. */
+const buildIndiaSearchPath = (location?: string, query?: string): string => {
+  const locationPath = location ? `/${resolveOlxIndiaLocation(location)}` : '';
+  const base = `${locationPath}/items/`;
+  return query ? `${base}q-${slugifyQuery(query, [])}/` : base;
+};
+
 /** Identical on every domain observed so far. */
 const COMMON_URL_PARAMS = {
   priceParams: {
@@ -159,6 +167,15 @@ export const OLX_DOMAIN_CONFIGS: Record<OlxDomain, DomainConfig> = {
     language: 'uk',
     selectors: COMMON_SELECTORS,
     urlPatterns: { searchPath: buildSearchPath('/ads/'), ...COMMON_URL_PARAMS },
+  },
+
+  'olx.in': {
+    domain: 'olx.in',
+    baseUrl: 'https://www.olx.in',
+    currency: 'INR',
+    language: 'en',
+    selectors: COMMON_SELECTORS,
+    urlPatterns: { searchPath: buildIndiaSearchPath, ...COMMON_URL_PARAMS },
   },
 };
 

@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 export const SearchListingsArgsSchema = z
   .object({
-    domain: z.enum(['olx.pt', 'olx.pl', 'olx.bg', 'olx.ro', 'olx.ua']),
+    domain: z.enum(['olx.pt', 'olx.pl', 'olx.bg', 'olx.ro', 'olx.ua', 'olx.in']),
     query: z.string().min(1).max(100).optional(),
     category: z.string().optional(),
     location: z.string().optional(),
@@ -24,7 +24,7 @@ export const SearchListingsArgsSchema = z
 export type SearchListingsArgs = z.infer<typeof SearchListingsArgsSchema>;
 
 export const GetListingDetailsArgsSchema = z.object({
-  domain: z.enum(['olx.pt', 'olx.pl', 'olx.bg', 'olx.ro', 'olx.ua']),
+  domain: z.enum(['olx.pt', 'olx.pl', 'olx.bg', 'olx.ro', 'olx.ua', 'olx.in']),
   // Rejects path and selector metacharacters (quotes, slashes, whitespace, ?, #)
   // that have no place in an OLX id. The id is also encoded before it reaches a
   // URL and passed as data to DOM queries; this is the outer guard.

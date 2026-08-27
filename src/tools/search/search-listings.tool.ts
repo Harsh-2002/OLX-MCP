@@ -9,7 +9,7 @@ import { OlxScraperFactory } from '../../scrapers/olx/scraper.factory.js';
 export class SearchListingsTool extends BaseTool<SearchListingsArgs, SearchResult> {
   readonly name = 'searchListings';
   readonly description =
-    'Search for listings on OLX domains (olx.pt, olx.pl, olx.bg, olx.ro, olx.ua) with various filters including query, category, location, and price range';
+    'Search for listings on OLX domains (olx.pt, olx.pl, olx.bg, olx.ro, olx.ua, olx.in) with various filters including query, category, location, and price range';
   readonly inputSchema = SearchListingsArgsSchema;
 
   constructor(private readonly scraperFactory: OlxScraperFactory) {

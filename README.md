@@ -6,7 +6,7 @@ Why search for e-waste in your area by yourself if Claude can do it for you?
 
 ## Features
 
-- 🌍 **Multi-Domain Support**: Search across 5 OLX domains (Portugal, Poland, Bulgaria, Romania, Ukraine)
+- 🌍 **Multi-Domain Support**: Search across 6 OLX domains (Portugal, Poland, Bulgaria, Romania, Ukraine, India)
 - 🔍 **Search Listings**: Search with filters for category, location, price range, and sorting
 - 📋 **Listing Details**: Get detailed information about specific listings including seller info
 - 🎭 **Browser Automation**: Reliable web scraping using Playwright
@@ -97,7 +97,7 @@ Search for "telefon" in "warszawa" on OLX Poland with prices between 100-500 PLN
 
 **Parameters:**
 
-- `domain` (required): OLX domain ('olx.pt', 'olx.pl', 'olx.bg', 'olx.ro', 'olx.ua')
+- `domain` (required): OLX domain ('olx.pt', 'olx.pl', 'olx.bg', 'olx.ro', 'olx.ua', 'olx.in')
 - `query` (optional): Search term
 - `category` (optional): Category filter
 - `location` (optional): Location filter
@@ -106,6 +106,10 @@ Search for "telefon" in "warszawa" on OLX Poland with prices between 100-500 PLN
 - `page` (default: 1): Page number
 - `limit` (default: 20): Items per page
 - `sortBy` (default: 'relevance'): Sort order ('relevance', 'date', 'price-asc', 'price-desc')
+
+For `olx.in`, `location` accepts major city names such as `Delhi`, `Mumbai`,
+`Bengaluru`, `Hyderabad`, `Chennai`, `Kolkata`, `Pune`, and `Ahmedabad`.
+Explicit OLX location slugs such as `mumbai_g4058997` can also be used.
 
 ### Listing Details
 
@@ -121,7 +125,7 @@ Show me details for listing "XYZ789" from OLX Poland including images?
 
 **Parameters:**
 
-- `domain` (required): OLX domain ('olx.pt', 'olx.pl', 'olx.bg', 'olx.ro', 'olx.ua')
+- `domain` (required): OLX domain ('olx.pt', 'olx.pl', 'olx.bg', 'olx.ro', 'olx.ua', 'olx.in')
 - `listingId` (required): The ID of the listing
 - `includeImages` (default: true): Include the listing's gallery image URLs
 - `includeSellerInfo` (default: true): Include seller information

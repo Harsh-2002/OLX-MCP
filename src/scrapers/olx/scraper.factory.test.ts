@@ -4,6 +4,7 @@ import type { Browser } from 'playwright';
 import { OlxScraperFactory } from './scraper.factory.js';
 import { OLXPTScraper } from './olx-pt.scraper.js';
 import { OLXPLScraper } from './olx-pl.scraper.js';
+import { OLXIndiaScraper } from './olx-india.scraper.js';
 import { BaseOlxScraper } from './base-olx.scraper.js';
 import {
   createPlaywrightMocks,
@@ -43,6 +44,12 @@ describe('OlxScraperFactory', () => {
     it('should create OLXPLScraper for olx.pl domain', () => {
       const scraper = factory.createScraper('olx.pl');
       expect(scraper).toBeInstanceOf(OLXPLScraper);
+      expect(scraper).toBeInstanceOf(BaseOlxScraper);
+    });
+
+    it('should create OLXIndiaScraper for olx.in domain', () => {
+      const scraper = factory.createScraper('olx.in');
+      expect(scraper).toBeInstanceOf(OLXIndiaScraper);
       expect(scraper).toBeInstanceOf(BaseOlxScraper);
     });
 
@@ -89,7 +96,7 @@ describe('OlxScraperFactory', () => {
     });
 
     it('should work for all supported domains', () => {
-      const domains: OlxDomain[] = ['olx.pt', 'olx.pl', 'olx.bg', 'olx.ro', 'olx.ua'];
+      const domains: OlxDomain[] = ['olx.pt', 'olx.pl', 'olx.bg', 'olx.ro', 'olx.ua', 'olx.in'];
 
       domains.forEach(domain => {
         const scraper = factory.getScraper(domain);
@@ -142,7 +149,7 @@ describe('OlxScraperFactory', () => {
     });
 
     it('should work for all domains', () => {
-      const domains: OlxDomain[] = ['olx.pt', 'olx.pl', 'olx.bg', 'olx.ro', 'olx.ua'];
+      const domains: OlxDomain[] = ['olx.pt', 'olx.pl', 'olx.bg', 'olx.ro', 'olx.ua', 'olx.in'];
 
       domains.forEach((domain, index) => {
         if (index < 3) {
@@ -184,13 +191,14 @@ describe('OlxScraperFactory', () => {
 
   describe('Domain configuration validation', () => {
     it('should ensure scrapers have correct domain configurations', () => {
-      const domains: OlxDomain[] = ['olx.pt', 'olx.pl', 'olx.bg', 'olx.ro', 'olx.ua'];
+      const domains: OlxDomain[] = ['olx.pt', 'olx.pl', 'olx.bg', 'olx.ro', 'olx.ua', 'olx.in'];
       const expectedBases = {
         'olx.pt': 'https://www.olx.pt',
         'olx.pl': 'https://www.olx.pl',
         'olx.bg': 'https://www.olx.bg',
         'olx.ro': 'https://www.olx.ro',
         'olx.ua': 'https://www.olx.ua',
+        'olx.in': 'https://www.olx.in',
       };
 
       domains.forEach(domain => {
@@ -207,7 +215,7 @@ describe('OlxScraperFactory', () => {
     });
 
     it('should ensure scrapers have working validateQuery method', () => {
-      const domains: OlxDomain[] = ['olx.pt', 'olx.pl', 'olx.bg', 'olx.ro', 'olx.ua'];
+      const domains: OlxDomain[] = ['olx.pt', 'olx.pl', 'olx.bg', 'olx.ro', 'olx.ua', 'olx.in'];
 
       domains.forEach(domain => {
         const scraper = factory.createScraper(domain);
@@ -234,7 +242,7 @@ describe('OlxScraperFactory', () => {
     });
 
     it('should handle multiple domains efficiently', () => {
-      const domains: OlxDomain[] = ['olx.pt', 'olx.pl', 'olx.bg', 'olx.ro', 'olx.ua'];
+      const domains: OlxDomain[] = ['olx.pt', 'olx.pl', 'olx.bg', 'olx.ro', 'olx.ua', 'olx.in'];
 
       // Create all scrapers multiple times
       for (let i = 0; i < 5; i++) {
