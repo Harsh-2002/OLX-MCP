@@ -116,6 +116,34 @@ they do not provide an anonymous replacement for public marketplace search.
 [Published listings API](https://developers.olx.com.br/anuncio/api/published_ads.html),
 [OAuth](https://developers.olx.com.br/anuncio/api/oauth.html).
 
+## Brazil access diagnosis
+
+A fresh Docker MCP recheck returned HTTP 403 for both location lookup and search.
+Normal Chromium navigation with its default user agent also returned Cloudflare's
+access-denied page for the homepage and public search, with JavaScript enabled
+and disabled. Direct HTTP/2 requests with project identification returned HTTP
+403 for `robots.txt`, the main sitemap and the São Paulo sitemap as well.
+These checks establish an upstream access failure in this environment; they do
+not establish that Brazil is inaccessible from every network or identify which
+Cloudflare rule caused the refusal.
+
+Selector changes cannot restore data that the server has not returned. The
+advertiser OAuth API serves a different use case and cannot satisfy anonymous
+marketplace search. A remaining verification requires a host where the public
+pages are reachable, or an OLX-provided marketplace access path.
+
+On such a host, build the same image and run:
+
+```bash
+docker build -t olx-mcp:local .
+npm run test:live:mcp -- --image=olx-mcp:local olx.com.br
+```
+
+All four checks must pass: location lookup, search with the returned location,
+listing details and a distinct second page when available. An accessible homepage
+alone is insufficient. Keep Brazil experimental until these checks verify the
+adapter's selectors and routes against live data.
+
 ## Primary references
 
 - [Brazil site navigation](https://www.olx.com.br/mapa-do-site)
