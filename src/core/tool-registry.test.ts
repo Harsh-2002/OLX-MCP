@@ -327,11 +327,14 @@ describe('ToolRegistry', () => {
       expect(registry.getAllTools()).toHaveLength(toolCount);
 
       // Test retrieval performance
+      const found: boolean[] = [];
       const lookupStartTime = Date.now();
       for (let i = 0; i < toolCount; i++) {
-        expect(registry.has(`tool-${i}`)).toBe(true);
+        found.push(registry.has(`tool-${i}`));
       }
       const lookupTime = Date.now() - lookupStartTime;
+      // Measure registry work, not the cost of 1,000 Vitest assertion calls.
+      expect(found).toEqual(Array.from({ length: toolCount }, () => true));
       expect(lookupTime).toBeLessThan(100); // Lookups should be fast
     });
 

@@ -79,3 +79,21 @@ Build the image with `docker build -t olx-mcp:local .`, then run
 `npm run test:docker`. These checks launch real Chromium and connect to the
 container's stdio MCP server with network access disabled. They are separate
 from the mocked suite and live OLX checks. See [Docker](../docs/docker.md).
+
+## MCP live verification
+
+```bash
+npm run test:live:mcp -- --image=olx-mcp:local
+```
+
+This opt-in command tests the Docker stdio server through the MCP SDK client.
+Its default matrix covers India, Brazil, Indonesia, Kazakhstan, Uzbekistan,
+Portugal, and Poland. It verifies location lookup where implemented, search,
+details, and a second page where available. Pass domain arguments to narrow
+the matrix; omit `--image` to run the compiled source server. Failed domain
+checks produce a nonzero exit code. It does not store seller or listing contents.
+
+Mocked location-provider tests exercise canonical-value handling and resource
+lifecycle; they do not establish that the live picker matches those selectors.
+Registry timing checks measure registry operations, with assertion work outside
+the measured interval.

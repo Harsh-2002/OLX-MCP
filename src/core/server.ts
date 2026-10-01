@@ -6,6 +6,9 @@ import { chromium, Browser } from 'playwright';
 import { ToolRegistry } from './tool-registry.js';
 import { SearchListingsTool } from '../tools/search/search-listings.tool.js';
 import { GetListingDetailsTool } from '../tools/listing/get-listing-details.tool.js';
+import { LocationService } from '../locations/location-service.js';
+import { BrowserLocationProvider } from '../locations/browser-location-provider.js';
+import { SearchLocationsTool } from '../tools/locations/search-locations.tool.js';
 import { OlxScraperFactory } from '../scrapers/olx/scraper.factory.js';
 
 export interface ServerConfig {
@@ -19,6 +22,7 @@ export class OLXMCPServer {
   private readonly server: Server;
   private browser?: Browser | undefined;
   private scraperFactory?: OlxScraperFactory | undefined;
+  private locationService?: LocationService;
 
   constructor(private readonly config: ServerConfig) {
     this.server = new Server(
@@ -54,10 +58,13 @@ export class OLXMCPServer {
     // Create scraper factory
     this.scraperFactory = new OlxScraperFactory(this.browser);
 
+    this.locationService = new LocationService(new BrowserLocationProvider(this.browser));
+
     // Register tools
     this.registry
-      .register(new SearchListingsTool(this.scraperFactory))
-      .register(new GetListingDetailsTool(this.scraperFactory));
+      .register(new SearchListingsTool(this.scraperFactory, this.locationService))
+      .register(new GetListingDetailsTool(this.scraperFactory))
+      .register(new SearchLocationsTool(this.locationService));
   }
 
   private setupHandlers(): void {
@@ -69,7 +76,7 @@ export class OLXMCPServer {
       })),
     }));
 
-    this.server.setRequestHandler(CallToolRequestSchema, async request => {
+    this.server.setRequestHandler(CallToolRequestSchema, async (request, extra) => {
       const { name, arguments: args } = request.params;
 
       const tool = this.registry.get(name);
@@ -77,7 +84,7 @@ export class OLXMCPServer {
         throw new Error(`Tool not found: ${name}`);
       }
 
-      const result = await tool.execute(args || {});
+      const result = await tool.execute(args || {}, extra?.signal);
 
       if (!result.success) {
         throw new Error(result.error.message);
@@ -100,6 +107,8 @@ export class OLXMCPServer {
 
   async cleanup(): Promise<void> {
     this.registry.clear();
+    this.locationService?.clear();
+    this.locationService = undefined;
     if (this.scraperFactory) {
       this.scraperFactory.clearCache();
       this.scraperFactory = undefined as OlxScraperFactory | undefined;

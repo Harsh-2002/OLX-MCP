@@ -1,21 +1,26 @@
 import { z } from 'zod';
+import { OLX_DOMAINS } from '../../core/domains.js';
 
 export const SearchListingsArgsSchema = z
   .object({
-    domain: z.enum(['olx.pt', 'olx.pl', 'olx.bg', 'olx.ro', 'olx.ua', 'olx.in']),
+    domain: z.enum(OLX_DOMAINS),
     query: z.string().min(1).max(100).optional(),
     category: z.string().optional(),
     location: z.string().optional(),
     minPrice: z.number().min(0).optional(),
     maxPrice: z.number().min(0).optional(),
-    page: z.number().min(1).default(1),
-    limit: z.number().min(1).max(50).default(20),
+    page: z.number().int().min(1).default(1),
+    limit: z.number().int().min(1).max(50).default(20),
     sortBy: z.enum(['relevance', 'date', 'price-asc', 'price-desc']).default('relevance'),
   })
-  .refine(data => !data.maxPrice || !data.minPrice || data.maxPrice >= data.minPrice, {
-    message: 'Max price must be greater than or equal to min price',
-    path: ['maxPrice'],
-  })
+  .refine(
+    data =>
+      data.maxPrice === undefined || data.minPrice === undefined || data.maxPrice >= data.minPrice,
+    {
+      message: 'Max price must be greater than or equal to min price',
+      path: ['maxPrice'],
+    }
+  )
   .refine(data => data.query || data.category || data.location, {
     message: 'At least one of query, category, or location must be provided',
     path: ['query'],
@@ -24,7 +29,7 @@ export const SearchListingsArgsSchema = z
 export type SearchListingsArgs = z.infer<typeof SearchListingsArgsSchema>;
 
 export const GetListingDetailsArgsSchema = z.object({
-  domain: z.enum(['olx.pt', 'olx.pl', 'olx.bg', 'olx.ro', 'olx.ua', 'olx.in']),
+  domain: z.enum(OLX_DOMAINS),
   // Rejects path and selector metacharacters (quotes, slashes, whitespace, ?, #)
   // that have no place in an OLX id. The id is also encoded before it reaches a
   // URL and passed as data to DOM queries; this is the outer guard.
@@ -53,7 +58,7 @@ export const GetLocationsArgsSchema = z.object({
   searchTerm: z.string().optional(),
   parentId: z.string().optional(),
   type: z.enum(['district', 'municipality', 'parish']).optional(),
-  limit: z.number().min(1).max(100).default(20),
+  limit: z.number().int().min(1).max(100).default(20),
 });
 
 export type GetLocationsArgs = z.infer<typeof GetLocationsArgsSchema>;

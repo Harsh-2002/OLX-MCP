@@ -107,6 +107,7 @@ export const withTimeout = <T>(promise: Promise<T>, ms: number): Promise<T> =>
 // Mock browser utilities
 export interface MockPage {
   goto: MockedFunction<Page['goto']>;
+  title: MockedFunction<Page['title']>;
   $: MockedFunction<Page['$']>;
   $$: MockedFunction<Page['$$']>;
   $eval: MockedFunction<Page['$eval']>;
@@ -143,6 +144,7 @@ export const createMockElementHandle = (
 export const createMockPage = (overrides: Partial<MockPage> = {}): MockPage =>
   ({
     goto: vi.fn().mockResolvedValue(undefined),
+    title: vi.fn().mockResolvedValue('OLX'),
     // Defaults mirror a page where nothing matches, so callers always get a
     // promise back rather than undefined.
     $: vi.fn().mockResolvedValue(null),

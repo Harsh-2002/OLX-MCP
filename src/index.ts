@@ -4,6 +4,7 @@ import { readFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import { OLX_DOMAINS } from './core/domains.js';
 import { OLXMCPServer } from './core/server.js';
 
 // Get version from package.json
@@ -23,7 +24,7 @@ if (process.argv.includes('--version') || process.argv.includes('-v')) {
 if (process.argv.includes('--help') || process.argv.includes('-h')) {
   console.log(`
 OLX MCP Server v${version}
-A Model Context Protocol server for searching OLX listings across Europe and India.
+A Model Context Protocol server for searching OLX listings across supported OLX country sites.
 
 Usage: olx-mcp
 
@@ -38,7 +39,7 @@ Example server configuration:
   }
 }
 
-Supports domains: olx.pt, olx.pl, olx.bg, olx.ro, olx.ua, olx.in
+Supports domains: ${OLX_DOMAINS.join(', ')}
   `);
   process.exit(0);
 }

@@ -3,6 +3,9 @@ import { OlxDomain } from '../../core/types.js';
 import { BaseOlxScraper } from './base-olx.scraper.js';
 import { OLXPTScraper } from './olx-pt.scraper.js';
 import { OLXPLScraper } from './olx-pl.scraper.js';
+import { OLXCentralAsiaScraper } from './olx-central-asia.scraper.js';
+import { OLXBrazilScraper } from './olx-brazil.scraper.js';
+import { OLXIndonesiaScraper } from './olx-indonesia.scraper.js';
 import { OLXIndiaScraper } from './olx-india.scraper.js';
 
 export class OlxScraperFactory {
@@ -26,6 +29,16 @@ export class OlxScraperFactory {
         break;
       case 'olx.pl':
         scraper = new OLXPLScraper(this.browser);
+        break;
+      case 'olx.com.br':
+        scraper = new OLXBrazilScraper(this.browser);
+        break;
+      case 'olx.co.id':
+        scraper = new OLXIndonesiaScraper(this.browser);
+        break;
+      case 'olx.kz':
+      case 'olx.uz':
+        scraper = new OLXCentralAsiaScraper(domain, this.browser);
         break;
       case 'olx.bg':
         // For now, use base scraper with domain config

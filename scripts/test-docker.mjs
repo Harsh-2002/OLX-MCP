@@ -60,7 +60,11 @@ try {
   await client.connect(transport);
   assert.equal(client.getServerVersion()?.version, version);
   const { tools } = await client.listTools();
-  assert.deepEqual(tools.map(tool => tool.name).sort(), ['getListingDetails', 'searchListings']);
+  assert.deepEqual(tools.map(tool => tool.name).sort(), [
+    'getListingDetails',
+    'searchListings',
+    'searchLocations',
+  ]);
   await assert.rejects(
     client.callTool({ name: 'searchListings', arguments: { domain: 'invalid', query: 'test' } }),
     /Validation error/

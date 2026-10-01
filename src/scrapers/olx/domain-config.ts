@@ -1,11 +1,7 @@
 import { DomainConfig, DomainSelectors, OlxDomain } from '../../core/types.js';
 import { resolveOlxIndiaLocation } from './olx-india-locations.js';
 
-/**
- * Every OLX country site is the same application with a different locale, so
- * the markup — and therefore every selector — is identical across supported
- * domains. Keeping one copy means a selector change is one edit, not six.
- */
+/** Selectors shared by the existing European adapters; other layouts are separate. */
 const COMMON_SELECTORS: DomainSelectors = {
   search: {
     listingCard: '[data-cy="l-card"]',
@@ -39,7 +35,7 @@ const COMMON_SELECTORS: DomainSelectors = {
 };
 
 /** OLX India still exposes its legacy data-aut-id markup rather than the shared test-id markup. */
-const INDIA_SELECTORS: DomainSelectors = {
+export const INDIA_SELECTORS: DomainSelectors = {
   search: {
     listingCard: 'li[data-aut-id^="itemBox"]',
     title: '[data-aut-id="itemTitle"]',
@@ -154,6 +150,52 @@ const COMMON_URL_PARAMS = {
   pageParam: 'page',
 } as const;
 
+/** Brazil uses the OLX Brazil design system rather than European card markup.
+ * These selectors require live verification when the site changes.
+ */
+const BRAZIL_SELECTORS: DomainSelectors = {
+  search: {
+    listingCard: 'section.olx-adcard, [data-testid="adcard"], [data-testid="ad-card"]',
+    title: '.olx-adcard__title, h2, h3',
+    price: '.olx-adcard__price, [data-testid="ad-price"]',
+    location: '.olx-adcard__location, [data-testid="ad-location"]',
+    image: 'img',
+    link: 'a.olx-adcard__link, a[href]',
+    publishDate: '.olx-adcard__date',
+    nextPage: 'a[rel="next"], [aria-label="Próxima página"]',
+    totalCount: '[data-testid="ad-count"], .olx-search-result-counter',
+    emptyState: '[data-testid="no-results"], .olx-empty-state',
+  },
+  detail: {
+    ...COMMON_SELECTORS.detail,
+    title: 'h1',
+    price: '[data-testid="ad-price"], .olx-ad-price',
+    description: '[data-testid="ad-description"], .olx-ad-description',
+    images: '[data-testid="ad-gallery"] img, .olx-ad-gallery img',
+    location: '[data-testid="ad-location"], .olx-ad-location',
+    seller: {
+      ...COMMON_SELECTORS.detail.seller,
+      name: '[data-testid="seller-name"], .olx-seller-name',
+      verified: '[data-testid="seller-verified"]',
+    },
+  },
+};
+
+const buildIndonesiaSearchPath = (location?: string, query?: string): string => {
+  if (location && !/^[a-z0-9-]+_[gr]\d+$/i.test(location)) {
+    throw new Error('Use searchLocations to obtain a canonical Indonesia location');
+  }
+  const base = `${location ? `/${location}` : ''}/items/`;
+  return query ? `${base}q-${slugifyQuery(query, [])}` : base;
+};
+
+const buildBrazilSearchPath = (location?: string): string => {
+  if (location && !/^estado-[a-z]{2}(?:\/[a-z0-9-]+)*$/.test(location)) {
+    throw new Error('Use searchLocations to obtain a canonical Brazil location');
+  }
+  return location ? `/${location}` : '/brasil';
+};
+
 export const OLX_DOMAIN_CONFIGS: Record<OlxDomain, DomainConfig> = {
   'olx.pt': {
     domain: 'olx.pt',
@@ -207,6 +249,62 @@ export const OLX_DOMAIN_CONFIGS: Record<OlxDomain, DomainConfig> = {
     language: 'en',
     selectors: INDIA_SELECTORS,
     urlPatterns: { searchPath: buildIndiaSearchPath, ...COMMON_URL_PARAMS },
+  },
+  'olx.com.br': {
+    domain: 'olx.com.br',
+    baseUrl: 'https://www.olx.com.br',
+    currency: 'BRL',
+    language: 'pt-BR',
+    selectors: BRAZIL_SELECTORS,
+    urlPatterns: {
+      searchPath: buildBrazilSearchPath,
+      priceParams: { min: 'ps', max: 'pe' },
+      sortParams: { date: '', 'price-asc': '', 'price-desc': '' },
+      categoryParam: 'category',
+      pageParam: 'o',
+    },
+  },
+  'olx.co.id': {
+    domain: 'olx.co.id',
+    baseUrl: 'https://www.olx.co.id',
+    currency: 'IDR',
+    language: 'id',
+    selectors: {
+      ...INDIA_SELECTORS,
+      search: {
+        ...INDIA_SELECTORS.search,
+        emptyState: '[data-aut-id="emptyResults"], [data-aut-id="noResults"]',
+      },
+    },
+    urlPatterns: { searchPath: buildIndonesiaSearchPath, ...COMMON_URL_PARAMS },
+  },
+  'olx.kz': {
+    domain: 'olx.kz',
+    baseUrl: 'https://www.olx.kz',
+    currency: 'KZT',
+    language: 'ru',
+    selectors: {
+      ...COMMON_SELECTORS,
+      search: {
+        ...COMMON_SELECTORS.search,
+        emptyState: '[data-testid="no-results"], [data-testid="no-results-message"]',
+      },
+    },
+    urlPatterns: { searchPath: buildSearchPath('/list/'), ...COMMON_URL_PARAMS },
+  },
+  'olx.uz': {
+    domain: 'olx.uz',
+    baseUrl: 'https://www.olx.uz',
+    currency: 'UZS',
+    language: 'ru',
+    selectors: {
+      ...COMMON_SELECTORS,
+      search: {
+        ...COMMON_SELECTORS.search,
+        emptyState: '[data-testid="no-results"], [data-testid="no-results-message"]',
+      },
+    },
+    urlPatterns: { searchPath: buildSearchPath('/list/'), ...COMMON_URL_PARAMS },
   },
 };
 

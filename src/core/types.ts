@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { OLX_DOMAINS } from './domains.js';
 
 export type Result<T, E = Error> = { success: true; data: T } | { success: false; error: E };
 
@@ -7,7 +8,7 @@ export type Brand<T, K> = T & { readonly __brand: K };
 export type ListingId = Brand<string, 'ListingId'>;
 export type CategoryId = Brand<string, 'CategoryId'>;
 export type LocationId = Brand<string, 'LocationId'>;
-export type OlxDomain = 'olx.pt' | 'olx.pl' | 'olx.bg' | 'olx.ro' | 'olx.ua' | 'olx.in';
+export type OlxDomain = (typeof OLX_DOMAINS)[number];
 
 export interface MCPTool<TArgs = unknown, TResult = unknown> {
   readonly name: string;
@@ -44,6 +45,7 @@ export interface DomainSelectors {
     readonly publishDate: string;
     readonly nextPage: string;
     readonly totalCount: string;
+    readonly emptyState?: string;
   };
   readonly detail: {
     readonly title: string;
@@ -72,6 +74,7 @@ export interface DomainUrlPatterns {
   readonly sortParams: Record<'date' | 'price-asc' | 'price-desc', string>;
   readonly categoryParam: string;
   readonly pageParam: string;
+  readonly sortParam?: string;
 }
 
 export interface Listing {

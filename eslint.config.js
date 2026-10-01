@@ -24,11 +24,13 @@ export default [
         URL: 'readonly',
         URLSearchParams: 'readonly',
         AbortSignal: 'readonly',
+        AbortController: 'readonly',
         // DOM globals: the scraper's extractors are typed against the document
         // they are serialised into and evaluated in.
         Element: 'readonly',
         HTMLElement: 'readonly',
         Document: 'readonly',
+        document: 'readonly',
       },
     },
     plugins: {
@@ -68,6 +70,7 @@ export default [
         URL: 'readonly',
         URLSearchParams: 'readonly',
         AbortSignal: 'readonly',
+        AbortController: 'readonly',
         // Test globals
         describe: 'readonly',
         it: 'readonly',
@@ -84,6 +87,7 @@ export default [
         SVGElement: 'readonly',
         Element: 'readonly',
         Document: 'readonly',
+        document: 'readonly',
       },
     },
     rules: {

@@ -1,11 +1,11 @@
 # OLX market research
 
 Research date: 2026-10-01. Pakistan and Bangladesh are excluded from the planned
-scope. These are proposed priorities, not newly implemented domain support.
+scope. Adapters are implemented for these priorities; live verification status is tracked in [Countries](countries.md).
 
 Improve India location discovery first. The current India adapter accepts
-mapped cities and canonical location slugs; it does not provide a complete city
-lookup tool. OLX publishes [city](https://www.olx.in/sitemap/cities) and
+mapped cities and canonical location slugs; live lookup is now exposed through `searchLocations`, but
+complete locality coverage depends on the public picker and directory. OLX publishes [city](https://www.olx.in/sitemap/cities) and
 [region](https://www.olx.in/sitemap/regions) directories. A location lookup tool
 should return canonical identifiers and state information, handle duplicate city
 names, and support the locations OLX actually serves rather than inventing URLs.

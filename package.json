@@ -40,7 +40,8 @@
     "clean": "node --input-type=module -e \"import { rmSync } from 'node:fs'; for (const path of ['dist', 'coverage']) rmSync(path, { recursive: true, force: true });\"",
     "ci": "npm run lint && npm run format:check && npm run type-check && npm run test:coverage && npm run build",
     "prepublishOnly": "npm run ci",
-    "test:docker": "node scripts/test-docker.mjs"
+    "test:docker": "node scripts/test-docker.mjs",
+    "test:live:mcp": "npm run build && node scripts/test-live-mcp.mjs"
   },
   "keywords": [
     "mcp",
@@ -60,7 +61,7 @@
   },
   "author": "Harsh-2002",
   "license": "MIT",
-  "description": "MCP server for searching OLX listings and retrieving listing details across six country sites",
+  "description": "MCP server with OLX listing adapters for ten country sites and live location lookup",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Harsh-2002/OLX-MCP.git"

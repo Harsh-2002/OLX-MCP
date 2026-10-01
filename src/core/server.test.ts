@@ -232,12 +232,13 @@ describe('OLXMCPServer', () => {
       return call![1];
     };
 
-    it('lists both tools after initialization with their JSON schemas', async () => {
+    it('lists all three tools after initialization with their JSON schemas', async () => {
       await server.initialize();
       const result = await getHandler(ListToolsRequestSchema)();
       expect(result.tools.map((tool: any) => tool.name)).toEqual([
         'searchListings',
         'getListingDetails',
+        'searchLocations',
       ]);
       expect(result.tools.every((tool: any) => tool.inputSchema.type === 'object')).toBe(true);
     });

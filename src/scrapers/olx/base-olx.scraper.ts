@@ -12,6 +12,8 @@ import {
   DomainConfig,
   ListingDetailsOptions,
 } from '../../core/types.js';
+import { assertPageAccessible } from './page-status.js';
+import { OLX_BROWSER_USER_AGENT } from '../../core/browser-profile.js';
 import { getDomainConfig } from './domain-config.js';
 import {
   extractDescriptionText,
@@ -34,8 +36,7 @@ export abstract class BaseOlxScraper extends PlaywrightScraper<SearchFilters, Se
         baseUrl: domainConfig.baseUrl,
         timeout: 30000,
         retries: 3,
-        userAgent:
-          'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+        userAgent: OLX_BROWSER_USER_AGENT,
         headless: true,
       },
       browser
@@ -61,8 +62,10 @@ export abstract class BaseOlxScraper extends PlaywrightScraper<SearchFilters, Se
     return await this.withPage(async page => {
       const searchUrl = this.buildSearchUrl(filters);
 
-      await page.goto(searchUrl, { waitUntil: this.getNavigationWaitUntil() });
+      const response = await page.goto(searchUrl, { waitUntil: this.getNavigationWaitUntil() });
+      await assertPageAccessible(page, response);
       await this.waitForSearchResults(page);
+      await this.prepareSearchPage(page, filters);
 
       if (signal?.aborted) {
         throw new Error('Operation cancelled');
@@ -89,6 +92,17 @@ export abstract class BaseOlxScraper extends PlaywrightScraper<SearchFilters, Se
         );
       }
 
+      if (
+        !cardCount &&
+        !pagination.totalCount &&
+        this.domainConfig.selectors.search.emptyState &&
+        !(await this.isKnownEmptyPage(page, filters))
+      ) {
+        throw new NonRetryableError(
+          `No recognized listing or empty-result markers on ${this.domainConfig.domain}; the page may be blocked or selectors changed`
+        );
+      }
+
       return {
         listings,
         ...pagination,
@@ -106,14 +120,14 @@ export abstract class BaseOlxScraper extends PlaywrightScraper<SearchFilters, Se
     }
 
     // Handle price filters
-    if (filters.minPrice) {
+    if (filters.minPrice !== undefined) {
       url.searchParams.set(
         this.domainConfig.urlPatterns.priceParams.min,
         filters.minPrice.toString()
       );
     }
 
-    if (filters.maxPrice) {
+    if (filters.maxPrice !== undefined) {
       url.searchParams.set(
         this.domainConfig.urlPatterns.priceParams.max,
         filters.maxPrice.toString()
@@ -124,7 +138,11 @@ export abstract class BaseOlxScraper extends PlaywrightScraper<SearchFilters, Se
     if (filters.sortBy && filters.sortBy !== 'relevance') {
       const sortValue = this.domainConfig.urlPatterns.sortParams[filters.sortBy];
       if (sortValue) {
-        url.searchParams.set('search[order]', sortValue);
+        url.searchParams.set(this.domainConfig.urlPatterns.sortParam ?? 'search[order]', sortValue);
+      } else {
+        throw new NonRetryableError(
+          `Sorting ${filters.sortBy} is not supported on ${this.domainConfig.domain}`
+        );
       }
     }
 
@@ -135,6 +153,13 @@ export abstract class BaseOlxScraper extends PlaywrightScraper<SearchFilters, Se
 
     return url.toString();
   }
+
+  protected async isKnownEmptyPage(page: Page, _filters: SearchFilters): Promise<boolean> {
+    const selector = this.domainConfig.selectors.search.emptyState;
+    return selector ? Boolean(await page.$(selector)) : false;
+  }
+
+  protected async prepareSearchPage(_page: Page, _filters: SearchFilters): Promise<void> {}
 
   /** India keeps analytics connections open, so it must not wait for network idle. */
   protected getNavigationWaitUntil(): 'networkidle' | 'domcontentloaded' {
@@ -153,9 +178,10 @@ export abstract class BaseOlxScraper extends PlaywrightScraper<SearchFilters, Se
     await page.waitForSelector(this.getSearchReadySelector(), { timeout: 10000 }).catch(() => {});
   }
 
-  private async extractListings(
+  protected async extractListings(
     page: Page,
-    limit?: number
+    limit?: number,
+    offset = 0
   ): Promise<{ listings: Listing[]; cardCount: number }> {
     const { listingCard, title, price, location, image, link } = this.domainConfig.selectors.search;
 
@@ -210,7 +236,8 @@ export abstract class BaseOlxScraper extends PlaywrightScraper<SearchFilters, Se
     );
 
     const listings: Listing[] = [];
-    for (const card of cards) {
+    const selectedCards = cards.slice(offset);
+    for (const card of selectedCards) {
       // A listing without these two is not addressable, so it cannot be returned.
       if (!card.title || !card.relativeUrl) continue;
 
@@ -241,14 +268,14 @@ export abstract class BaseOlxScraper extends PlaywrightScraper<SearchFilters, Se
     // Cards on the page but none parsed means the per-field selectors no longer
     // match. Returning [] would be indistinguishable from a search that
     // genuinely found nothing, which is how stale selectors ship unnoticed.
-    if (cards.length > 0 && listings.length === 0) {
+    if (selectedCards.length > 0 && listings.length === 0) {
       throw new NonRetryableError(
         `Found ${cards.length} listing cards on ${this.domainConfig.domain} but extracted none — ` +
           `the "${title}" or "${link}" selector is likely stale.`
       );
     }
 
-    return { listings, cardCount: cards.length };
+    return { listings, cardCount: selectedCards.length };
   }
 
   /** Bounded so a long-lived server cannot accumulate every URL it has seen. */
@@ -260,7 +287,7 @@ export abstract class BaseOlxScraper extends PlaywrightScraper<SearchFilters, Se
     this.urlCache.set(id, url);
   }
 
-  private async extractPaginationInfo(page: Page, currentPage: number, cardCount: number) {
+  protected async extractPaginationInfo(page: Page, currentPage: number, cardCount: number) {
     const totalCount = await page
       .$eval(this.domainConfig.selectors.search.totalCount, el => {
         const text = el.textContent || '';
@@ -348,7 +375,8 @@ export abstract class BaseOlxScraper extends PlaywrightScraper<SearchFilters, Se
       }
 
       // Navigate to the listing page
-      await page.goto(finalUrl, { waitUntil: this.getNavigationWaitUntil() });
+      const response = await page.goto(finalUrl, { waitUntil: this.getNavigationWaitUntil() });
+      await assertPageAccessible(page, response);
       await this.waitForListingDetails(page);
 
       if (signal?.aborted) {
@@ -459,7 +487,7 @@ export abstract class BaseOlxScraper extends PlaywrightScraper<SearchFilters, Se
     }
   }
 
-  private async extractSellerInfo(page: Page) {
+  protected async extractSellerInfo(page: Page) {
     const seller = this.domainConfig.selectors.detail.seller;
     const [name, verified] = await Promise.all([
       readOptionalText(page, seller.name),

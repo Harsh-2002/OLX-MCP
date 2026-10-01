@@ -1,3 +1,4 @@
+import { OLX_DOMAINS } from '../../core/domains.js';
 import { BaseTool } from '../base/base-tool.js';
 import {
   GetListingDetailsArgsSchema,
@@ -8,8 +9,7 @@ import { OlxScraperFactory } from '../../scrapers/olx/scraper.factory.js';
 
 export class GetListingDetailsTool extends BaseTool<GetListingDetailsArgs, Listing> {
   readonly name = 'getListingDetails';
-  readonly description =
-    'Get detailed information about a specific OLX listing from any supported domain (olx.pt, olx.pl, olx.bg, olx.ro, olx.ua, olx.in) including description, seller info, and images';
+  readonly description = `Get detailed information about a specific OLX listing from any supported domain ${OLX_DOMAINS.join(', ')} including description, seller info, and images`;
   readonly inputSchema = GetListingDetailsArgsSchema;
 
   constructor(private readonly scraperFactory: OlxScraperFactory) {

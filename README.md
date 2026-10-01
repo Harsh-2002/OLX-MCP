@@ -2,7 +2,9 @@
 
 An MCP server for searching OLX listings and getting listing details.
 
-Supports Portugal, Poland, Bulgaria, Romania, Ukraine, and India.
+Country adapters cover Portugal, Poland, Bulgaria, Romania, Ukraine, India,
+Brazil, Indonesia, Kazakhstan, and Uzbekistan. Brazil and Indonesia remain
+experimental; Kazakhstan and Uzbekistan passed live MCP checks. See [Country capabilities](docs/countries.md).
 
 ## Setup
 
@@ -61,10 +63,38 @@ Optional filters include `minPrice`, `maxPrice`, `page`, `limit`, and `sortBy`.
 }
 ```
 
-Domains: `olx.pt`, `olx.pl`, `olx.bg`, `olx.ro`, `olx.ua`, and `olx.in`.
+Domains: `olx.pt`, `olx.pl`, `olx.bg`, `olx.ro`, `olx.ua`, `olx.in`,
+`olx.com.br`, `olx.co.id`, `olx.kz`, and `olx.uz`.
+
+Filters vary by country. Brazil accepts native category paths and has no custom
+sorting. Indonesia supports query, canonical location, limit, and up to ten
+load-more batches; category, price, and custom sort filters return an explicit
+unsupported-filter error.
 
 For India, use a supported city name such as Mumbai or Bengaluru, or an explicit
 OLX location slug such as `mumbai_g4058997`.
+
+### `searchLocations`
+
+Look up live OLX location suggestions in India, Brazil, Indonesia, Kazakhstan,
+and Uzbekistan. Requires `domain` and `query`; accepts `parentId` when OLX exposes
+parent metadata and an integer `limit` from 1 to 50 (default 20).
+
+```json
+{
+  "domain": "olx.in",
+  "query": "Aluva",
+  "limit": 5
+}
+```
+
+Pass a returned location's `searchValue` unchanged to `searchListings.location`.
+Existing India aliases such as Mumbai still work; additional friendly names are
+resolved live. Ambiguous names require a canonical value from this tool.
+
+Lookup needs network access. Successful results are cached for ten minutes;
+failed refreshes do not serve expired data. OLX may restrict automated access,
+and its city directories do not guarantee coverage of every locality.
 
 ### `getListingDetails`
 

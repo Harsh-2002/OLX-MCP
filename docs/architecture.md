@@ -17,7 +17,7 @@ MCP client
   -> MCP request handlers (src/core/server.ts)
   -> tool registry
   -> tool argument validation (BaseTool + Zod schema)
-  -> searchListings or getListingDetails adapter
+  -> searchListings, getListingDetails, or searchLocations adapter
   -> cached domain scraper (OlxScraperFactory)
   -> isolated Playwright page
   -> OLX DOM extraction
@@ -26,7 +26,7 @@ MCP client
 ```
 
 `OLXMCPServer.initialize()` launches a shared browser, creates the scraper factory,
-and registers two tools before connecting the transport. Tool discovery converts
+and registers three tools before connecting the transport. Tool discovery converts
 Zod schemas to JSON Schema. Tool failures become thrown errors at the MCP handler;
 successes are serialized into one text content block.
 
@@ -54,6 +54,10 @@ The executable wrapper in `bin/` starts the compiled entry point and forwards si
 
 Portugal and Poland use thin subclasses that bind the shared scraper to a domain.
 Bulgaria, Romania, and Ukraine use the generic scraper with their domain configuration.
+Kazakhstan and Uzbekistan share a dedicated adapter for native category paths
+and `/list/` queries. Brazil has its own card configuration, numeric ID extraction,
+and query-parameter search. Indonesia has an iid adapter with isolated per-page
+load-more offsets. New-country selectors remain subject to live verification.
 The five European configurations currently share selectors; this is an implementation
 assumption that needs live verification when site markup changes.
 
@@ -75,8 +79,8 @@ The default page timeout is 30 seconds. Operations make up to three attempts,
 with exponential backoff between failures. `NonRetryableError` bypasses retry
 for detected stale selectors and missing detail-page titles.
 
-Abort checks exist at several boundaries, but the MCP handler does not forward
-its request signal to tools. In-flight navigation and retry delays are not actively
+The MCP handler forwards request cancellation signals to tools. Abort checks exist
+at several boundaries. In-flight navigation and retry delays are not actively
 cancelled. There is no concurrency limiter or global operation deadline.
 
 ## Search and detail data
@@ -101,12 +105,11 @@ short final pages. Output schemas exist but are not applied to scraper responses
 
 ## Current limits
 
-- Category/location discovery schemas and types exist, but no discovery tools are registered.
+- Category discovery and older location schemas remain unused. Live location discovery is implemented separately for India and the four new markets.
 - Publication dates, seller phone numbers and membership dates, categories, and attributes are not extracted.
 - Browser mocks test local behavior; they do not verify current live selectors or anti-bot behavior.
-- Search price handling uses truthiness, so a zero-valued bound is not added to the URL.
-- Page and limit schemas allow fractional numbers; integer-only validation is a future behavior change.
-- The price-range refinement treats zero as absent, allowing some contradictory ranges through.
+- Page and limit arguments require integers. Price bounds, including zero, are validated and passed to supported domain filters.
+- Brazil custom sorting and Indonesia category/price/sort filters are not implemented; those requests fail explicitly.
 - Seller verification is inferred from a DOM marker rather than independently verified.
 
 ## Extension points
@@ -125,3 +128,16 @@ dependencies in separate stages. The non-root runtime includes only the
 application, production dependencies, headless Chromium, its system libraries,
 and Tini. The image uses the same stdio entry point as a source installation.
 See [Docker](docker.md) for build, client configuration, and offline smoke checks.
+
+## Live location lookup
+
+`LocationService` caches successful live queries for ten minutes and coalesces
+identical pending requests. Each domain has at most 200 cached entries.
+`BrowserLocationProvider` owns a page per lookup, reads the public picker, and
+uses a legacy city-directory fallback when available. It closes pages on success,
+failure, or its 30-second deadline. `SearchLocationsTool` exposes canonical values
+without inventing IDs or parent metadata. Search resolves additional friendly
+names through the same service and refuses ambiguous matches.
+
+Only location metadata is cached, never listing contents or seller data.
+Coverage and live availability are documented in [Countries](countries.md).
