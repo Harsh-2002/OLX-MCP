@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "olx-mcp": {
+      "command": "node",
+      "args": ["/absolute/path/to/OLX-MCP/dist/index.js"]
+    }
+  }
+}
