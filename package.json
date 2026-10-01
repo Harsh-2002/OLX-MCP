@@ -61,7 +61,7 @@
   },
   "author": "Harsh-2002",
   "license": "MIT",
-  "description": "MCP server with OLX listing adapters for ten country sites and live location lookup",
+  "description": "MCP server with OLX listing adapters for nine country sites and live location lookup",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Harsh-2002/OLX-MCP.git"

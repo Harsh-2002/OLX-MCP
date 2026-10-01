@@ -3,8 +3,7 @@
 An MCP server for searching OLX listings and getting listing details.
 
 Country adapters cover Portugal, Poland, Bulgaria, Romania, Ukraine, India,
-Brazil, Indonesia, Kazakhstan, and Uzbekistan. Brazil remains
-experimental because live requests are blocked; live verification results are tracked per country. See [Country capabilities](docs/countries.md).
+Indonesia, Kazakhstan, and Uzbekistan. Live verification results are tracked per country. See [Country capabilities](docs/countries.md).
 
 ## Setup
 
@@ -64,10 +63,9 @@ Optional filters include `minPrice`, `maxPrice`, `page`, `limit`, and `sortBy`.
 ```
 
 Domains: `olx.pt`, `olx.pl`, `olx.bg`, `olx.ro`, `olx.ua`, `olx.in`,
-`olx.com.br`, `olx.co.id`, `olx.kz`, and `olx.uz`.
+`olx.co.id`, `olx.kz`, and `olx.uz`.
 
-Filters vary by country. Brazil accepts native category paths and has no custom
-sorting. Indonesia supports query, canonical location, limit, and up to ten
+Filters vary by country. Indonesia supports query, canonical location, limit, and up to ten
 load-more batches; category, price, and custom sort filters return an explicit
 unsupported-filter error.
 
@@ -76,7 +74,7 @@ OLX route such as `mumbai_g4058997` or a numeric route returned by `searchLocati
 
 ### `searchLocations`
 
-Look up live OLX location suggestions in India, Brazil, Indonesia, Kazakhstan,
+Look up live OLX location suggestions in India, Indonesia, Kazakhstan,
 and Uzbekistan. Requires `domain` and `query`; accepts `parentId` when OLX exposes
 parent metadata and an integer `limit` from 1 to 50 (default 20).
 

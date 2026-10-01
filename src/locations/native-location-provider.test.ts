@@ -194,9 +194,9 @@ describe('native location lookup', () => {
     const browser = { lookup: vi.fn().mockResolvedValue([]) };
     const native = { lookup: vi.fn().mockResolvedValue([]) };
     const provider = new OlxLocationProvider(browser, native);
-    for (const domain of ['olx.in', 'olx.co.id', 'olx.kz', 'olx.uz', 'olx.com.br'] as const)
+    for (const domain of ['olx.in', 'olx.co.id', 'olx.kz', 'olx.uz'] as const)
       await provider.lookup({ domain, query: 'City', limit: 1 });
     expect(native.lookup).toHaveBeenCalledTimes(2);
-    expect(browser.lookup).toHaveBeenCalledTimes(3);
+    expect(browser.lookup).toHaveBeenCalledTimes(2);
   });
 });

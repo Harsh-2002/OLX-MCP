@@ -65,7 +65,6 @@ describe('live public location provider', () => {
   it.each([
     ['olx.in', 'Aluva', 'aluva_g4395807'],
     ['olx.co.id', 'Jakarta Selatan', 'jakarta-selatan_g4000030'],
-    ['olx.com.br', 'São Paulo', 'estado-sp/sao-paulo-e-regiao/sao-paulo'],
     ['olx.kz', 'Алматы', 'almaty'],
     ['olx.uz', 'Ташкент', 'tashkent'],
   ] as const)('uses browser-observed public canonical values on %s', async (domain, name, slug) => {
@@ -260,19 +259,6 @@ describe('live public location provider', () => {
     await expect(
       legacy.provider.lookup({ domain: 'olx.in', query: 'Unknown', limit: 1 })
     ).rejects.toThrow('recognized location links');
-  });
-
-  it('opens the Brazil picker before filling its input', async () => {
-    const { provider, input, opener, page } = setup('olx.com.br');
-    input.count.mockResolvedValueOnce(0).mockResolvedValue(1);
-    opener.count.mockResolvedValue(1);
-    page.$$eval.mockResolvedValue([
-      { name: 'São Paulo', value: '/estado-sp/sao-paulo-e-regiao/sao-paulo', location: true },
-    ]);
-    expect(
-      await provider.lookup({ domain: 'olx.com.br', query: 'São Paulo', limit: 1 })
-    ).toHaveLength(1);
-    expect(opener.click).toHaveBeenCalledOnce();
   });
 
   it('returns an empty result only when the picker explicitly confirms none', async () => {

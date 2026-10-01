@@ -6,11 +6,10 @@ export const OLX_DOMAINS = [
   'olx.ro',
   'olx.ua',
   'olx.in',
-  'olx.com.br',
   'olx.co.id',
   'olx.kz',
   'olx.uz',
 ] as const;
 
-export const LOCATION_DOMAINS = ['olx.in', 'olx.com.br', 'olx.co.id', 'olx.kz', 'olx.uz'] as const;
+export const LOCATION_DOMAINS = ['olx.in', 'olx.co.id', 'olx.kz', 'olx.uz'] as const;
 export type LocationDomain = (typeof LOCATION_DOMAINS)[number];

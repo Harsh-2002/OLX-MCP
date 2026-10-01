@@ -89,7 +89,7 @@ npm run test:live:mcp -- --image=olx-mcp:local
 ```
 
 This opt-in command tests the Docker stdio server through the MCP SDK client.
-Its default matrix covers all ten configured countries. It verifies location lookup where implemented, search,
+Its default matrix covers all nine configured countries. It verifies location lookup where implemented, search,
 details, and a second page where available. Pass domain arguments to narrow
 the matrix; omit `--image` to run the compiled source server. Failed domain
 checks produce a nonzero exit code. It does not store seller or listing contents.

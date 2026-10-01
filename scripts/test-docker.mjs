@@ -29,6 +29,7 @@ const browserCheck = spawnSync(
       assert.notEqual(process.getuid(), 0, 'Container must run as a non-root user');
       assert.equal(existsSync('/app/node_modules/typescript'), false, 'Development dependencies must be absent');
       assert.equal(existsSync('/app/src'), false, 'Source files must be absent');
+      assert.equal(existsSync('/app/dist/scrapers/olx/olx-brazil.scraper.js'), false, 'Removed adapter must be absent');
       const browser = await chromium.launch({ channel: 'chromium', headless: true });
       try {
         const page = await browser.newPage();
@@ -97,6 +98,15 @@ try {
     client.callTool({ name: 'searchListings', arguments: { domain: 'invalid', query: 'test' } }),
     /Validation error/
   );
+  for (const name of ['searchListings', 'searchLocations', 'getListingDetails']) {
+    await assert.rejects(
+      client.callTool({
+        name,
+        arguments: { domain: 'olx.com.br', query: 'test', listingId: '123' },
+      }),
+      /Validation error/
+    );
+  }
   console.log(
     'Docker checks passed: non-root runtime, Chromium, MCP handshake, tools, and validation'
   );

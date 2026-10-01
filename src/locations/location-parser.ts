@@ -69,9 +69,6 @@ export function canonicalLocationValue(domain: LocationDomain, value: string): s
   if (domain === 'olx.in' || domain === 'olx.co.id') {
     return /^(?:[a-z0-9-]+_[gr]\d+|_g[1-9]\d*)$/i.test(path) ? path : undefined;
   }
-  if (domain === 'olx.com.br') {
-    return /^estado-[a-z]{2}(?:\/[a-z0-9-]+)*$/.test(path) ? path : undefined;
-  }
   return /^[a-z0-9-]+$/i.test(path) ? path : undefined;
 }
 

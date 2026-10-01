@@ -11,11 +11,6 @@ describe('canonical location values', () => {
     ['olx.in', '_g4395807', '_g4395807'],
     ['olx.co.id', '/_g4000216', '_g4000216'],
     ['olx.co.id', '/jakarta-selatan_g4000030', 'jakarta-selatan_g4000030'],
-    [
-      'olx.com.br',
-      '/estado-sp/sao-paulo-e-regiao/sao-paulo',
-      'estado-sp/sao-paulo-e-regiao/sao-paulo',
-    ],
     ['olx.kz', '/almaty/', 'almaty'],
     ['olx.uz', '/tashkent/', 'tashkent'],
   ] as const)('accepts observed canonical paths for %s', (domain, value, expected) => {

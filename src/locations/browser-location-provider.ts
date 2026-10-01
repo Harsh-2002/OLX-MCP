@@ -10,8 +10,6 @@ const INPUTS: Record<LocationDomain, string> = {
   'olx.in':
     '[data-aut-id="locationBox"] input, input[placeholder*="location" i], input[placeholder*="city" i]',
   'olx.co.id': '[data-aut-id="locationBox"] input, input[placeholder*="kota" i]',
-  'olx.com.br':
-    'input[placeholder*="cidade" i], input[placeholder*="localização" i], input[placeholder*="CEP" i]',
   'olx.kz':
     'input[data-testid="location-search-input"], input[placeholder*="Вся страна"], input[placeholder*="город" i]',
   'olx.uz':
@@ -36,12 +34,6 @@ export class BrowserLocationProvider implements LocationProvider {
       });
       await assertPageAccessible(page, response);
       const input = page.locator(INPUTS[query.domain]).first();
-      if (!(await input.count()) && query.domain === 'olx.com.br') {
-        const opener = page
-          .getByRole('button', { name: /localização|localiza[cç][aã]o|regi[aã]o/i })
-          .first();
-        if (await opener.count()) await opener.click();
-      }
       if (!(await input.count())) {
         return await this.lookupDirectory(page, query);
       }
@@ -105,7 +97,7 @@ export class BrowserLocationProvider implements LocationProvider {
       const selectedMatches = this.filter(selected, query);
       if (selectedMatches.length) return selectedMatches;
       const empty = page.getByText(
-        /no locations found|no results found|nenhuma localidade|lokasi tidak ditemukan|ничего не найдено/i
+        /no locations found|no results found|lokasi tidak ditemukan|ничего не найдено/i
       );
       if (await empty.count()) return [];
       // A directory can provide canonical city links when the picker uses opaque internal state.
@@ -139,12 +131,6 @@ export class BrowserLocationProvider implements LocationProvider {
         });
         await assertPageAccessible(page, response);
         const input = page.locator(INPUTS[query.domain]).first();
-        if (!(await input.count()) && query.domain === 'olx.com.br') {
-          const opener = page
-            .getByRole('button', { name: /localização|localiza[cç][aã]o|regi[aã]o/i })
-            .first();
-          if (await opener.count()) await opener.click();
-        }
         await input.fill(query.query);
         await page.waitForSelector(selector, { timeout: 5000 });
       }
@@ -158,7 +144,7 @@ export class BrowserLocationProvider implements LocationProvider {
       const submitSelector = getDomainConfig(query.domain).locationSearchSubmit;
       const search = submitSelector
         ? page.locator(submitSelector).first()
-        : page.getByRole('button', { name: /^(search|buscar|cari|поиск)$/i }).first();
+        : page.getByRole('button', { name: /^(search|cari|поиск)$/i }).first();
       if (await search.count()) await search.click();
       await page
         .waitForURL(url => Boolean(this.routeValue(query.domain, url)), { timeout: 3000 })

@@ -14,7 +14,7 @@ export const SearchLocationsArgsSchema = z.object({
 export class SearchLocationsTool extends BaseTool<LocationQuery, { locations: LocationMatch[] }> {
   readonly name = 'searchLocations';
   readonly description =
-    'Look up live OLX locations in India, Brazil, Indonesia, Kazakhstan, or Uzbekistan. Pass a returned searchValue to searchListings.location. Live availability and directory coverage vary by country.';
+    'Look up live OLX locations in India, Indonesia, Kazakhstan, or Uzbekistan. Pass a returned searchValue to searchListings.location. Live availability and directory coverage vary by country.';
   readonly inputSchema = SearchLocationsArgsSchema;
   constructor(private readonly service: LocationService) {
     super();

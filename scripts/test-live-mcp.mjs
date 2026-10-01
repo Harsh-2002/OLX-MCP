@@ -18,7 +18,6 @@ const transport = new StdioClientTransport({
 });
 const queries = {
   'olx.in': ['Aluva', 'laptop'],
-  'olx.com.br': ['São Paulo', 'notebook'],
   'olx.co.id': ['Jakarta Selatan', 'laptop'],
   'olx.kz': ['Алматы', 'ноутбук'],
   'olx.uz': ['Ташкент', 'ноутбук'],

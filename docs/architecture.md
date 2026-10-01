@@ -58,8 +58,7 @@ The executable wrapper in `bin/` starts the compiled entry point and forwards si
 Portugal and Poland use thin subclasses that bind the shared scraper to a domain.
 Bulgaria, Romania, and Ukraine use the generic scraper with their domain configuration.
 Kazakhstan and Uzbekistan share a dedicated adapter for native category paths
-and `/list/` queries. Brazil has its own card configuration, numeric ID extraction,
-and query-parameter search. India and Indonesia share a load-more adapter with isolated per-page offsets and native iid IDs. New-country selectors remain subject to live verification.
+and `/list/` queries. India and Indonesia share a load-more adapter with isolated per-page offsets and native iid IDs. New-country selectors remain subject to live verification.
 The five European configurations currently share selectors; this is an implementation
 assumption that needs live verification when site markup changes.
 
@@ -111,11 +110,11 @@ short final pages. Output schemas exist but are not applied to scraper responses
 
 ## Current limits
 
-- Category discovery and older location schemas remain unused. Live location discovery is implemented separately for India and the four new markets.
+- Category discovery and older location schemas remain unused. Live location discovery is implemented separately for India and the three new markets.
 - Publication dates, seller phone numbers and membership dates, categories, and attributes are not extracted.
 - Browser mocks test local behavior; they do not verify current live selectors or anti-bot behavior.
 - Page and limit arguments require integers. Price bounds, including zero, are validated and passed to supported domain filters.
-- Brazil custom sorting and Indonesia category/price/sort filters are not implemented; those requests fail explicitly.
+- Indonesia category/price/sort filters are not implemented; those requests fail explicitly.
 - Seller verification is inferred from a DOM marker rather than independently verified.
 
 ## Extension points
@@ -140,7 +139,7 @@ See [Docker](docker.md) for build, client configuration, and offline smoke check
 `LocationService` caches successful live queries for ten minutes and coalesces
 identical pending requests. Each domain has at most 200 cached entries.
 `OlxLocationProvider` dispatches India and Indonesia to `NativeLocationProvider`, which reads the public native autocomplete endpoint over HTTP/2. Numeric `_g` routes use actual upstream IDs. Requests have a 15-second absolute deadline and a 1 MiB response limit; sessions close on success and every failure.
-`BrowserLocationProvider` handles Brazil, Kazakhstan and Uzbekistan with a page per lookup and a 30-second deadline. `SearchLocationsTool` exposes canonical values
+`BrowserLocationProvider` handles Kazakhstan and Uzbekistan with a page per lookup and a 30-second deadline. `SearchLocationsTool` exposes canonical values
 without inventing IDs or parent metadata. Search resolves additional friendly
 names through the same service and refuses ambiguous matches.
 

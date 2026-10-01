@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { OlxScraperFactory } from './scraper.factory.js';
-import { OLXBrazilScraper } from './olx-brazil.scraper.js';
 import { OLXIndiaScraper } from './olx-india.scraper.js';
 import { OLXIndonesiaScraper } from './olx-indonesia.scraper.js';
 import { OLXCentralAsiaScraper } from './olx-central-asia.scraper.js';
+import { SearchLocationsArgsSchema } from '../../tools/locations/search-locations.tool.js';
 import { OLX_DOMAINS } from '../../core/domains.js';
 import {
   GetListingDetailsArgsSchema,
@@ -19,7 +19,7 @@ import { assertIsSuccess } from '../../../tests/utils/test-helpers.js';
 beforeEach(() => resetPlaywrightMocks());
 
 describe('country routing and URL behavior', () => {
-  it('routes all ten domains and validates them consistently', () => {
+  it('routes all nine domains and validates them consistently', () => {
     const { browser } = createPlaywrightMocks();
     const factory = new OlxScraperFactory(browser);
     for (const domain of OLX_DOMAINS) {
@@ -27,43 +27,19 @@ describe('country routing and URL behavior', () => {
       expect(GetListingDetailsArgsSchema.parse({ domain, listingId: '123' }).domain).toBe(domain);
       expect(factory.getScraper(domain)).toBe(factory.getScraper(domain));
     }
-    expect(factory.getScraper('olx.com.br')).toBeInstanceOf(OLXBrazilScraper);
     expect(factory.getScraper('olx.co.id')).toBeInstanceOf(OLXIndonesiaScraper);
     expect(factory.getScraper('olx.kz')).toBeInstanceOf(OLXCentralAsiaScraper);
     expect(factory.getScraper('olx.uz')).toBeInstanceOf(OLXCentralAsiaScraper);
   });
 
-  it('uses Brazil query parameters, native category paths, and zero price bounds', () => {
+  it('rejects the removed country at every tool boundary and scraper routing', () => {
+    const domain = 'olx.com.br';
+    expect(() => SearchListingsArgsSchema.parse({ domain, query: 'test' })).toThrow();
+    expect(() => GetListingDetailsArgsSchema.parse({ domain, listingId: '123' })).toThrow();
+    expect(() => SearchLocationsArgsSchema.parse({ domain, query: 'test' })).toThrow();
     const { browser } = createPlaywrightMocks();
-    const scraper = new OLXBrazilScraper(browser) as any;
-    const url = new URL(
-      scraper.buildSearchUrl({
-        domain: 'olx.com.br',
-        query: 'notebook São Paulo',
-        category: 'informatica/notebooks',
-        location: 'estado-sp/sao-paulo-e-regiao/sao-paulo',
-        minPrice: 0,
-        maxPrice: 1000,
-        page: 2,
-      })
-    );
-    expect(url.pathname).toBe('/estado-sp/sao-paulo-e-regiao/sao-paulo/informatica/notebooks');
-    expect(url.searchParams.get('q')).toBe('notebook São Paulo');
-    expect(url.searchParams.get('ps')).toBe('0');
-    expect(url.searchParams.get('pe')).toBe('1000');
-    expect(url.searchParams.get('o')).toBe('2');
-    expect(url.searchParams.has('category')).toBe(false);
-    expect(
-      new URL(scraper.buildSearchUrl({ domain: 'olx.com.br', query: 'laptop' })).pathname
-    ).toBe('/brasil');
-    expect(() =>
-      scraper.buildSearchUrl({ domain: 'olx.com.br', query: 'laptop', sortBy: 'date' })
-    ).toThrow('not supported');
-    expect(() =>
-      scraper.buildSearchUrl({ domain: 'olx.com.br', query: 'laptop', location: 'São Paulo' })
-    ).toThrow('canonical');
-    expect(() => scraper.buildSearchUrl({ domain: 'olx.com.br', category: '../evil' })).toThrow(
-      'native path'
+    expect(() => new OlxScraperFactory(browser).getScraper(domain as any)).toThrow(
+      'Unsupported OLX domain'
     );
   });
 
@@ -98,15 +74,11 @@ describe('country routing and URL behavior', () => {
     }
   );
 
-  it('extracts native IDs and never invents uncached Brazil or Indonesia detail routes', async () => {
+  it('extracts native IDs and never invents uncached Indonesia detail routes', async () => {
     const { browser } = createPlaywrightMocks();
-    const brazil = new OLXBrazilScraper(browser) as any;
     const indonesia = new OLXIndonesiaScraper(browser) as any;
-    expect(brazil.extractListingId('/informatica/notebooks/sample-1234567890')).toBe('1234567890');
     expect(indonesia.extractListingId('/item/sample-iid-1234567890')).toBe('1234567890');
-    expect(brazil.extractListingId('/unknown')).toMatch(/^u/);
     expect(indonesia.extractListingId('/unknown')).toMatch(/^u/);
-    await expect(brazil.findListingUrl()).rejects.toThrow('Search Brazil first');
     await expect(indonesia.findListingUrl()).rejects.toThrow('Search Indonesia first');
   });
 
@@ -124,9 +96,11 @@ describe('country routing and URL behavior', () => {
 
   it('rejects a blank new-country page rather than returning zero results', async () => {
     const { browser } = createPlaywrightMocks();
-    setupOLXScrapingMocks();
-    const result = await new OLXBrazilScraper(browser).scrape({
-      domain: 'olx.com.br',
+    const { mockPage } = setupOLXScrapingMocks();
+    mockPage.$$eval.mockResolvedValue([]);
+    mockPage.$eval.mockResolvedValue(0);
+    const result = await new OLXCentralAsiaScraper('olx.kz', browser).scrape({
+      domain: 'olx.kz',
       query: 'sample',
     });
     expect(result.success).toBe(false);
