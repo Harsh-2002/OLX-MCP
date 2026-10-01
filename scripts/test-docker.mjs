@@ -38,14 +38,26 @@ const browserCheck = spawnSync(
         const fixture = '<div data-cy="l-card"><a href="/d/anuncio/fixture-IDfixture.html"><div data-testid="ad-card-title"><h4>Fixture listing</h4></div><span data-testid="ad-price">10 EUR</span></a></div><span data-testid="total-count">1</span><script>document.querySelector("[data-cy=l-card]").remove();throw new Error("ChunkLoadError");</script>';
         const fixtureBrowser = { newPage: async options => {
           const fixturePage = await browser.newPage(options);
-          await fixturePage.route(new RegExp('^https://www[.]olx[.](pt|uz)/'), route => route.fulfill({ status: 200, contentType: 'text/html', body: fixture }));
+          await fixturePage.route(new RegExp('^https://www[.]olx[.](pt|pl|bg|ro|ua|kz|uz)/'), route => route.fulfill({ status: 200, contentType: 'text/html', body: fixture }));
           return fixturePage;
         } };
-        for (const domain of ['olx.pt', 'olx.uz']) {
+        for (const domain of ['olx.pt', 'olx.pl', 'olx.bg', 'olx.ro', 'olx.ua', 'olx.kz', 'olx.uz']) {
           const result = await new OlxScraperFactory(fixtureBrowser).getScraper(domain).scrape({ domain, query: 'fixture', limit: 1 });
           assert.equal(result.success, true, 'SSR fixture search must succeed');
           assert.equal(result.data.listings[0]?.title, 'Fixture listing', 'SSR cards must survive page scripts');
         }
+        const polishDetail = '<div data-testid="offer_title"><h4>Polish fixture title</h4><button>Watch</button></div><div data-testid="ad-price-container">10 PLN</div><div data-testid="ad_description">Fixture description</div><script>document.querySelector("[data-testid=offer_title]").remove();</script>';
+        const polishBrowser = { newPage: async options => {
+          const fixturePage = await browser.newPage(options);
+          await fixturePage.route(new RegExp('^https://www[.]olx[.]pl/'), route => route.fulfill({ status: 200, contentType: 'text/html', body: route.request().url().includes('/d/anuncio/') ? polishDetail : fixture.split('<script>')[0] }));
+          return fixturePage;
+        } };
+        const polishScraper = new OlxScraperFactory(polishBrowser).getScraper('olx.pl');
+        const polishSearch = await polishScraper.scrape({ domain: 'olx.pl', query: 'fixture', limit: 1 });
+        assert.equal(polishSearch.success, true);
+        const polishResult = await polishScraper.getListingDetails(polishSearch.data.listings[0].id);
+        assert.equal(polishResult.success, true, 'Polish SSR details must survive frontend scripts');
+        assert.equal(polishResult.data.title, 'Polish fixture title', 'Action button text must not enter the title');
         await page.setContent(fixture);
         assert.equal(await page.locator('[data-cy="l-card"]').count(), 0, 'Fixture must reproduce card loss when JavaScript is enabled');
         await page.setContent('<title>OLX MCP container check</title>');

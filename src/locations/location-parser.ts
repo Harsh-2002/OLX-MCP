@@ -1,6 +1,58 @@
 import type { LocationDomain } from '../core/domains.js';
 import type { LocationMatch } from './types.js';
 
+export type NativeLocationMetadata = Omit<LocationMatch, 'searchValue'>;
+
+/** Opaque native suggestions carry metadata, but never a canonical route. */
+export function parseNativeLocationMetadata(payload: unknown): NativeLocationMetadata[] {
+  const result = new Map<string, NativeLocationMetadata>();
+  const types: Record<string, LocationMatch['type']> = {
+    CITY: 'city',
+    STATE: 'region',
+    REGION: 'region',
+    PROVINCE: 'region',
+    DISTRICT: 'district',
+    NEIGHBOURHOOD: 'locality',
+    NEIGHBORHOOD: 'locality',
+    LOCALITY: 'locality',
+  };
+  const walk = (value: unknown, depth: number): void => {
+    if (!value || typeof value !== 'object' || depth > 8) return;
+    if (Array.isArray(value)) {
+      for (const item of value) walk(item, depth + 1);
+      return;
+    }
+    const row = value as Record<string, unknown>;
+    const id =
+      typeof row['id'] === 'number' || typeof row['id'] === 'string' ? String(row['id']) : '';
+    const name = row['name'];
+    const type = typeof row['type'] === 'string' ? types[row['type'].toUpperCase()] : undefined;
+    if (/^[1-9]\d*$/.test(id) && typeof name === 'string' && name.trim() && type) {
+      const parent = row['parentId'];
+      const components = Array.isArray(row['addressComponents']) ? row['addressComponents'] : [];
+      const region = components.find(
+        component =>
+          component &&
+          typeof component === 'object' &&
+          ['STATE', 'REGION', 'PROVINCE'].includes(String(component.type).toUpperCase())
+      );
+      result.set(id, {
+        id,
+        name: name.trim(),
+        type,
+        ...(typeof parent === 'number' || typeof parent === 'string'
+          ? { parentId: String(parent) }
+          : {}),
+        ...(typeof region?.name === 'string' ? { region: region.name } : {}),
+      });
+    }
+    for (const key of ['data', 'results', 'locations', 'suggestions', 'items', 'location'])
+      walk(row[key], depth + 1);
+  };
+  walk(payload, 0);
+  return [...result.values()];
+}
+
 /** Accept only a canonical route actually supplied by OLX, never a guessed city slug. */
 export function canonicalLocationValue(domain: LocationDomain, value: string): string | undefined {
   let path = value;
@@ -15,7 +67,7 @@ export function canonicalLocationValue(domain: LocationDomain, value: string): s
     }
   }
   if (domain === 'olx.in' || domain === 'olx.co.id') {
-    return /^[a-z0-9-]+_[gr]\d+$/i.test(path) ? path : undefined;
+    return /^(?:[a-z0-9-]+_[gr]\d+|_g[1-9]\d*)$/i.test(path) ? path : undefined;
   }
   if (domain === 'olx.com.br') {
     return /^estado-[a-z]{2}(?:\/[a-z0-9-]+)*$/.test(path) ? path : undefined;

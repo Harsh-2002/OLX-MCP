@@ -102,6 +102,6 @@ requires an external display and additional desktop configuration.
 Full Chromium replaces the smaller headless-shell build because live India and
 Indonesia requests failed with the shell and succeeded with full Chromium.
 On linux/amd64, the full-Chromium image reports approximately 1.07 GB
-(1,073,693,599 bytes) through `docker image inspect`, compared with about
+(1,073,751,096 bytes) through `docker image inspect`, compared with about
 847 MB for the shell image. The increase is approximately 227 MB (27%).
 Docker local size is not a registry download size.

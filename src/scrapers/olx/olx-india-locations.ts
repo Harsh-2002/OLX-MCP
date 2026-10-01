@@ -130,7 +130,7 @@ const INDIA_LOCATION_ALIASES: Readonly<Record<string, string>> = {
   kerala_r2001158: 'kerala_g2001160',
 };
 
-const INDIA_LOCATION_SLUG = /^[a-z0-9-]+_[gr]\d+$/i;
+const INDIA_LOCATION_SLUG = /^(?:[a-z0-9-]+_[gr]\d+|_g[1-9]\d*)$/i;
 
 const normalizeLocationKey = (location: string): string =>
   location.trim().toLowerCase().replace(/\s+/g, '-');

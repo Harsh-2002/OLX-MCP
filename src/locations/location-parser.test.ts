@@ -1,9 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import { canonicalLocationValue, parseLocationSuggestions } from './location-parser.js';
+import {
+  canonicalLocationValue,
+  parseLocationSuggestions,
+  parseNativeLocationMetadata,
+} from './location-parser.js';
 
 describe('canonical location values', () => {
   it.each([
     ['olx.in', 'https://www.olx.in/aluva_g4395807', 'aluva_g4395807'],
+    ['olx.in', '_g4395807', '_g4395807'],
+    ['olx.co.id', '/_g4000216', '_g4000216'],
     ['olx.co.id', '/jakarta-selatan_g4000030', 'jakarta-selatan_g4000030'],
     [
       'olx.com.br',
@@ -19,6 +25,9 @@ describe('canonical location values', () => {
     'https://evil.example/mumbai_g4058997',
     'http://www.olx.in/mumbai_g4058997',
     'Mumbai',
+    '_g0',
+    '_g-1',
+    '_gabc',
     '../mumbai',
     '/mumbai_g4058997/items/',
     'javascript:alert(1)',
@@ -122,5 +131,45 @@ describe('public suggestion parsing', () => {
       }).map(row => row.type)
     ).toEqual(['region', 'locality']);
     expect(parseLocationSuggestions('olx.in', 'invalid')).toEqual([]);
+  });
+});
+
+describe('opaque native location metadata', () => {
+  it('preserves upstream IDs, types and parents without creating route tokens', () => {
+    const city = {
+      id: 4395807,
+      name: 'Aluva',
+      type: 'CITY',
+      parentId: 2001160,
+      addressComponents: [{ type: 'STATE', name: 'Kerala' }],
+    };
+    expect(
+      parseNativeLocationMetadata({
+        data: {
+          suggestions: [
+            city,
+            city,
+            { id: 5, name: 'Local Area', type: 'NEIGHBOURHOOD', parentId: 4395807 },
+          ],
+        },
+      })
+    ).toEqual([
+      { id: '4395807', name: 'Aluva', type: 'city', parentId: '2001160', region: 'Kerala' },
+      { id: '5', name: 'Local Area', type: 'locality', parentId: '4395807' },
+    ]);
+  });
+  it('ignores countries, invalid IDs and unknown types', () => {
+    expect(
+      parseNativeLocationMetadata({
+        data: [
+          null,
+          { id: 0, name: 'Invalid', type: 'CITY' },
+          { id: 1, name: 'India', type: 'COUNTRY' },
+          { id: 2, name: '', type: 'CITY' },
+          { id: 3, name: 'Unknown', type: 'unknown' },
+        ],
+      })
+    ).toEqual([]);
+    expect(parseNativeLocationMetadata(null)).toEqual([]);
   });
 });

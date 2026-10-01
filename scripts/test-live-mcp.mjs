@@ -5,9 +5,7 @@ import { OLX_DOMAINS, LOCATION_DOMAINS } from '../dist/core/domains.js';
 
 const imageOption = process.argv.slice(2).find(arg => arg.startsWith('--image='));
 const requested = process.argv.slice(2).filter(arg => !arg.startsWith('--'));
-const domains = requested.length
-  ? requested
-  : ['olx.in', 'olx.com.br', 'olx.co.id', 'olx.kz', 'olx.uz', 'olx.pt', 'olx.pl'];
+const domains = requested.length ? requested : [...OLX_DOMAINS];
 for (const domain of domains) assert(OLX_DOMAINS.includes(domain), `Unsupported domain: ${domain}`);
 const image = imageOption?.slice('--image='.length);
 const client = new Client({ name: 'olx-live-verification', version: '1.0.0' });
@@ -26,13 +24,33 @@ const queries = {
   'olx.uz': ['Ташкент', 'ноутбук'],
   'olx.pt': ['', 'telefone'],
   'olx.pl': ['', 'telefon'],
+  'olx.bg': ['', 'лаптоп'],
+  'olx.ro': ['', 'laptop'],
+  'olx.ua': ['', 'ноутбук'],
 };
 const reports = [];
 async function call(name, args) {
+  const started = Date.now();
+  console.log(
+    JSON.stringify({
+      domain: args.domain,
+      operation: name,
+      page: args.page ?? 1,
+      status: 'started',
+    })
+  );
   const result = await client.callTool({ name, arguments: args }, undefined, { timeout: 120000 });
   assert(!result.isError, `${name} returned a tool error`);
   const text = result.content.find(block => block.type === 'text');
   assert(text, 'MCP response has no text content');
+  console.log(
+    JSON.stringify({
+      domain: args.domain,
+      operation: name,
+      elapsedMs: Date.now() - started,
+      status: 'completed',
+    })
+  );
   return JSON.parse(text.text);
 }
 try {
@@ -74,31 +92,64 @@ try {
       });
       assert(result.listings?.length, 'Search returned no listings');
       report.search = location ? 'passed-with-location' : 'passed-countrywide';
-      const details = await call('getListingDetails', { domain, listingId: result.listings[0].id });
-      assert(details.title, 'Details have no title');
-      assert.equal(details.id, result.listings[0].id);
-      report.details = 'passed';
-      if (result.hasNextPage) {
-        const next = await call('searchListings', {
+      try {
+        const details = await call('getListingDetails', {
           domain,
-          query,
-          ...(location ? { location } : {}),
-          limit: 2,
-          page: 2,
+          listingId: result.listings[0].id,
         });
-        assert.equal(next.currentPage, 2);
-        assert(next.listings?.length, 'Second page has no listings');
-        assert.notDeepEqual(
-          next.listings.map(row => row.id),
-          result.listings.map(row => row.id),
-          'Pagination repeated the first page'
-        );
-        report.pagination = 'passed';
+        assert(details.title, 'Details have no title');
+        assert(details.price, 'Details have no displayed price');
+        assert.equal(details.id, result.listings[0].id);
+        report.details = 'passed';
+      } catch (error) {
+        report.details = error.message;
+        report.failure = error.message;
+      }
+      if (result.hasNextPage) {
+        try {
+          const next = await call('searchListings', {
+            domain,
+            query,
+            ...(location ? { location } : {}),
+            limit: 2,
+            page: 2,
+          });
+          assert.equal(next.currentPage, 2);
+          assert(next.listings?.length, 'Second page has no listings');
+          assert.notDeepEqual(
+            next.listings.map(row => row.id),
+            result.listings.map(row => row.id),
+            'Pagination repeated the first page'
+          );
+          report.pagination = 'passed';
+        } catch (error) {
+          report.pagination = error.message;
+          report.failure ??= error.message;
+        }
       } else report.pagination = 'no-next-page';
     } catch (error) {
+      report.search = 'failed';
       report.failure = error.message;
     }
     if (domain === 'olx.in') {
+      try {
+        const first = await call('searchListings', { domain, query, limit: 2 });
+        assert(first.listings?.length, 'India countrywide search returned no listings');
+        if (first.hasNextPage) {
+          const next = await call('searchListings', { domain, query, limit: 2, page: 2 });
+          assert(next.listings?.length, 'India countrywide second batch has no listings');
+          assert.notDeepEqual(
+            next.listings.map(row => row.id),
+            first.listings.map(row => row.id),
+            'India countrywide pagination repeated the first batch'
+          );
+          report.countrywidePagination = 'passed';
+        } else report.countrywidePagination = 'no-next-page';
+      } catch (error) {
+        report.countrywidePagination = error.message;
+        report.failure ??= error.message;
+      }
+
       try {
         const mumbai = await call('searchListings', {
           domain,
@@ -112,7 +163,24 @@ try {
           listingId: mumbai.listings[0].id,
         });
         assert(details.title, 'Mumbai details have no title');
+        assert(details.price, 'Mumbai details have no displayed price');
         report.mumbai = 'passed-search-and-details';
+        if (mumbai.hasNextPage) {
+          const next = await call('searchListings', {
+            domain,
+            query,
+            location: 'Mumbai',
+            limit: 2,
+            page: 2,
+          });
+          assert(next.listings?.length, 'Mumbai second batch has no listings');
+          assert.notDeepEqual(
+            next.listings.map(row => row.id),
+            mumbai.listings.map(row => row.id),
+            'Mumbai pagination repeated the first batch'
+          );
+          report.mumbaiPagination = 'passed';
+        } else report.mumbaiPagination = 'no-next-page';
       } catch (error) {
         report.mumbai = error.message;
         report.failure ??= error.message;

@@ -116,6 +116,8 @@ export interface MockPage {
   close: MockedFunction<Page['close']>;
   url: MockedFunction<() => string>;
   setDefaultTimeout: MockedFunction<Page['setDefaultTimeout']>;
+  getByRole: MockedFunction<Page['getByRole']>;
+  locator: MockedFunction<Page['locator']>;
 }
 
 export interface MockBrowser {
@@ -143,6 +145,11 @@ export const createMockElementHandle = (
 
 export const createMockPage = (overrides: Partial<MockPage> = {}): MockPage =>
   ({
+    getByRole: vi.fn().mockReturnValue({
+      count: vi.fn().mockResolvedValue(0),
+      isVisible: vi.fn().mockResolvedValue(false),
+    }),
+    locator: vi.fn().mockReturnValue({ count: vi.fn().mockResolvedValue(0) }),
     goto: vi.fn().mockResolvedValue(undefined),
     title: vi.fn().mockResolvedValue('OLX'),
     // Defaults mirror a page where nothing matches, so callers always get a

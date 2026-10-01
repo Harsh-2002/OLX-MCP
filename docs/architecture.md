@@ -36,20 +36,22 @@ The executable wrapper in `bin/` starts the compiled entry point and forwards si
 
 ## Modules
 
-| Path                                       | Responsibility                                             |
-| ------------------------------------------ | ---------------------------------------------------------- |
-| `src/core/server.ts`                       | Browser ownership, MCP tool discovery and invocation       |
-| `src/core/tool-registry.ts`                | Named tool registration and lookup                         |
-| `src/core/types.ts`                        | Listing, search, configuration, and `Result` contracts     |
-| `src/tools/base/base-tool.ts`              | Argument validation and exception-to-`Result` conversion   |
-| `src/tools/search/`                        | Search tool adapter                                        |
-| `src/tools/listing/`                       | Detail tool adapter                                        |
-| `src/validation/schemas/listing.schema.ts` | Input validation and additional unused schemas             |
-| `src/scrapers/base/scraper.interface.ts`   | Page lifecycle, timeouts, retries                          |
-| `src/scrapers/olx/base-olx.scraper.ts`     | Shared URL building, search/detail extraction, URL caching |
-| `src/scrapers/olx/domain-config.ts`        | Per-domain URLs, selectors, currencies, languages          |
-| `src/scrapers/olx/dom-extractors.ts`       | Self-contained browser-side extraction functions           |
-| `src/scrapers/olx/olx-india-locations.ts`  | Friendly-name and explicit-slug resolution for India       |
+| Path                                        | Responsibility                                             |
+| ------------------------------------------- | ---------------------------------------------------------- |
+| `src/core/server.ts`                        | Browser ownership, MCP tool discovery and invocation       |
+| `src/core/tool-registry.ts`                 | Named tool registration and lookup                         |
+| `src/core/types.ts`                         | Listing, search, configuration, and `Result` contracts     |
+| `src/tools/base/base-tool.ts`               | Argument validation and exception-to-`Result` conversion   |
+| `src/locations/`                            | Native HTTP/2 and browser location lookup, bounded caching |
+| `src/scrapers/olx/load-more-olx.scraper.ts` | Shared India/Indonesia batch loading and offsets           |
+| `src/tools/search/`                         | Search tool adapter                                        |
+| `src/tools/listing/`                        | Detail tool adapter                                        |
+| `src/validation/schemas/listing.schema.ts`  | Input validation and additional unused schemas             |
+| `src/scrapers/base/scraper.interface.ts`    | Page lifecycle, timeouts, retries                          |
+| `src/scrapers/olx/base-olx.scraper.ts`      | Shared URL building, search/detail extraction, URL caching |
+| `src/scrapers/olx/domain-config.ts`         | Per-domain URLs, selectors, currencies, languages          |
+| `src/scrapers/olx/dom-extractors.ts`        | Self-contained browser-side extraction functions           |
+| `src/scrapers/olx/olx-india-locations.ts`   | Friendly-name and explicit-slug resolution for India       |
 
 ## Country behavior
 
@@ -57,8 +59,7 @@ Portugal and Poland use thin subclasses that bind the shared scraper to a domain
 Bulgaria, Romania, and Ukraine use the generic scraper with their domain configuration.
 Kazakhstan and Uzbekistan share a dedicated adapter for native category paths
 and `/list/` queries. Brazil has its own card configuration, numeric ID extraction,
-and query-parameter search. Indonesia has an iid adapter with isolated per-page
-load-more offsets. New-country selectors remain subject to live verification.
+and query-parameter search. India and Indonesia share a load-more adapter with isolated per-page offsets and native iid IDs. New-country selectors remain subject to live verification.
 The five European configurations currently share selectors; this is an implementation
 assumption that needs live verification when site markup changes.
 
@@ -75,10 +76,10 @@ normalize selected diacritics; other non-ASCII query slugs are percent-encoded.
 The factory lazily creates and caches one scraper per requested domain. Each
 operation creates a new page via `browser.newPage()` and closes it in `finally`.
 The browser process is shared; pages do not retain an authenticated user session.
-Portugal and Uzbekistan search pages disable page JavaScript and read the
-server-rendered HTML. Their frontend can discard valid listing cards after a
-JavaScript chunk-loading failure. Detail pages and live location pickers retain
-JavaScript; Indonesia also needs it for load-more navigation.
+European and Central Asian search pages disable page JavaScript and read the
+server-rendered HTML. This avoids client chunk failures and hydration changing
+valid result cards during extraction. Polish details also read server-rendered HTML and select the title heading within its wrapper.
+Other detail pages and browser location pickers retain JavaScript; India and Indonesia need it for load-more navigation.
 
 The default page timeout is 30 seconds. Operations make up to three attempts,
 with exponential backoff between failures. `NonRetryableError` bypasses retry
@@ -138,9 +139,8 @@ See [Docker](docker.md) for build, client configuration, and offline smoke check
 
 `LocationService` caches successful live queries for ten minutes and coalesces
 identical pending requests. Each domain has at most 200 cached entries.
-`BrowserLocationProvider` owns a page per lookup, reads the public picker, and
-uses a legacy city-directory fallback when available. It closes pages on success,
-failure, or its 30-second deadline. `SearchLocationsTool` exposes canonical values
+`OlxLocationProvider` dispatches India and Indonesia to `NativeLocationProvider`, which reads the public native autocomplete endpoint over HTTP/2. Numeric `_g` routes use actual upstream IDs. Requests have a 15-second absolute deadline and a 1 MiB response limit; sessions close on success and every failure.
+`BrowserLocationProvider` handles Brazil, Kazakhstan and Uzbekistan with a page per lookup and a 30-second deadline. `SearchLocationsTool` exposes canonical values
 without inventing IDs or parent metadata. Search resolves additional friendly
 names through the same service and refuses ambiguous matches.
 

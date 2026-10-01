@@ -33,8 +33,11 @@ export interface DomainConfig {
   readonly selectors: DomainSelectors;
   readonly urlPatterns: DomainUrlPatterns;
   readonly searchJavaScriptEnabled?: boolean;
+  readonly detailJavaScriptEnabled?: boolean;
   readonly locationSearchSubmit?: string;
   readonly locationSuggestionsPath?: string;
+  readonly locationIdRoutePrefix?: string;
+  readonly loadMoreButtonName?: string;
 }
 
 export interface DomainSelectors {

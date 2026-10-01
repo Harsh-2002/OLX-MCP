@@ -55,7 +55,7 @@ describe('OLXIndiaScraper', () => {
     const url = gotoCall![0] as string;
 
     expect(url).toContain('https://www.olx.in/bengaluru_g4058803/items/q-iphone-15/');
-    expect(url).toContain('page=2');
+    expect(url).not.toContain('page=');
     expect(gotoCall![1]).toMatchObject({ waitUntil: 'domcontentloaded' });
   });
 

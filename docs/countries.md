@@ -1,61 +1,69 @@
 # Country capabilities
 
-The MCP schemas accept ten domains. An adapter being present does not guarantee
-that OLX allows automated access from a particular network. Brazil and Indonesia
-remain experimental. Kazakhstan and Uzbekistan passed live location, search,
-details, and pagination checks in the implementation environment.
+The MCP schemas accept ten domains. Live availability depends on the upstream
+site and network. Brazil remains experimental because its public pages return
+HTTP 403 in the verification environment. Other adapters have passed sampled
+live MCP checks; operation results are listed below.
 
-| Country    | Domain       | Currency metadata | Search behavior                                                                              |
-| ---------- | ------------ | ----------------- | -------------------------------------------------------------------------------------------- |
-| Portugal   | `olx.pt`     | EUR               | Existing European adapter                                                                    |
-| Poland     | `olx.pl`     | PLN               | Existing European adapter                                                                    |
-| Bulgaria   | `olx.bg`     | BGN               | Existing European configuration                                                              |
-| Romania    | `olx.ro`     | RON               | Existing European configuration                                                              |
-| Ukraine    | `olx.ua`     | UAH               | Existing European configuration                                                              |
-| India      | `olx.in`     | INR               | Existing legacy adapter, aliases and live location resolution                                |
-| Brazil     | `olx.com.br` | BRL               | Separate card layout, query parameters and native category paths; custom sorting unavailable |
-| Indonesia  | `olx.co.id`  | IDR               | Legacy cards and iid IDs; query, location and limit; load-more batches 1–10                  |
-| Kazakhstan | `olx.kz`     | KZT               | `/list/` search routes, native category paths, Unicode queries                               |
-| Uzbekistan | `olx.uz`     | UZS               | `/list/` search routes, native category paths, Unicode queries                               |
+| Country    | Domain       | Currency metadata | Search behavior                                                                        |
+| ---------- | ------------ | ----------------- | -------------------------------------------------------------------------------------- |
+| Portugal   | `olx.pt`     | EUR               | European adapter with server-rendered search                                           |
+| Poland     | `olx.pl`     | PLN               | European adapter with server-rendered details                                          |
+| Bulgaria   | `olx.bg`     | EUR               | European configuration                                                                 |
+| Romania    | `olx.ro`     | RON               | European configuration                                                                 |
+| Ukraine    | `olx.ua`     | UAH               | European configuration                                                                 |
+| India      | `olx.in`     | INR               | Legacy cards, city aliases, live locations, load-more batches 1–10                     |
+| Brazil     | `olx.com.br` | BRL               | Separate cards, query parameters and native category paths; custom sorting unavailable |
+| Indonesia  | `olx.co.id`  | IDR               | Legacy cards, iid IDs, query, location and limit; load-more batches 1–10               |
+| Kazakhstan | `olx.kz`     | KZT               | `/list/` routes, native category paths, Unicode queries                                |
+| Uzbekistan | `olx.uz`     | UZS               | `/list/` routes, native category paths, Unicode queries                                |
 
 Prices remain the site's displayed strings. Currency metadata does not convert
-prices; Uzbekistan can display different currency units. Use the site's native
-price-filter units. Pagination totals are estimates; Indonesia's `page` selects
-a load-more batch, and `limit` caps returned listings rather than defining batch
-size. Batches can overlap if listings change between requests.
+prices; Uzbekistan can display different currency units. Use native price-filter
+units. Bulgaria metadata is EUR following its 2026 changeover; any dual-currency
+price labels are preserved. [ECB reference](https://www.ecb.europa.eu/euro/changeover/bulgaria/html/index.en.html).
+
+Pagination totals are estimates. In India and Indonesia, `page` selects a native
+load-more batch. `limit` caps returned listings rather than defining batch size.
+Batches may overlap if listings change between requests. India retains its
+existing filters; Indonesia rejects unverified category, price and sort filters.
+Brazil, Kazakhstan and Uzbekistan category inputs are native paths, for example
+`informatica/notebooks` or `elektronika/kompyutery/noutbuki`.
 
 ## Location inputs
 
-Use `searchLocations` for India and the four new markets. It reads the public
-location picker and accepts canonical values from public suggestion responses or
-location links. It does not invent API endpoints or derive IDs from city names.
-The legacy city directory is a live fallback when its picker exposes no canonical
-values. The India directory inspected during research contained only 100 unique
-city slugs, so it cannot establish complete locality coverage.
+Use `searchLocations` for India, Brazil, Indonesia, Kazakhstan and Uzbekistan.
+India and Indonesia read the public native autocomplete endpoint over HTTP/2.
+The returned numeric IDs form native `_g<ID>` search routes, verified with Aluva
+and Surabaya. Names never become guessed slugs. Lookup no longer depends on
+browser picker hydration or the limited city sitemap.
 
-Location output includes `id`, `name`, `type`, and `searchValue`. Parent IDs and
-region names appear only when OLX provides them. A `searchValue` is a route token,
-not necessarily the same as `id`; pass `searchValue` to listing search.
+Brazil, Kazakhstan and Uzbekistan use the public browser picker, accepting
+canonical paths from native responses or location links. Kazakhstan and
+Uzbekistan district suggestions need additional native filters and are omitted
+rather than silently converted to city searches.
 
-India and Indonesia use identifiers such as `aluva_g4395807` and
-`jakarta-selatan_g4000030`. Brazil uses regional paths such as
-`estado-sp/sao-paulo-e-regiao/sao-paulo`. Kazakhstan and Uzbekistan use native
-location route slugs: the live picker returns `alma-ata` for Алматы and
-`tashkent` for Ташкент. District suggestions on these two sites need additional
-native filters and are currently omitted, rather than silently converted to city
-searches. Category inputs for Brazil, Kazakhstan, and Uzbekistan
-are native paths, for example `informatica/notebooks` or
-`elektronika/kompyutery/noutbuki`.
+Output includes `id`, `name`, `type` and `searchValue`. Parent IDs and region names
+appear only when OLX supplies them. Pass `searchValue` unchanged to listing search.
+India and Indonesia return values such as `_g4395807` and `_g4000030`; existing
+named routes such as `aluva_g4395807` remain accepted. Brazil uses regional paths
+such as `estado-sp/sao-paulo-e-regiao/sao-paulo`. Native picker slugs include
+`alma-ata` for Алматы and `tashkent` for Ташкент.
 
-Unknown and ambiguous friendly names produce an error with lookup guidance.
-Directory fallback cannot supply missing parent metadata or unlisted localities;
-those cases produce an explicit coverage error. Do not interpret that error as
-proof that a locality does not exist.
+India city aliases such as Mumbai remain supported. Additional friendly names
+resolve live; unknown or ambiguous names require lookup and an explicit canonical
+value. Public autocomplete determines discoverable localities. Country-level
+suggestions are outside the region/city/district/locality output contract.
 
-Opaque pickers may return a single canonical match because each further selection
-requires another navigation. Location calls have a 30-second provider deadline. Successful queries are cached
-for ten minutes, at most 200 entries per domain; identical pending queries share
-one fetch. A caller can cancel without cancelling another caller's shared fetch.
+Additional native JSON checks covered Kerala, Kakkanad, Coimbatore, Surabaya and
+Jawa Timur, including city, region and locality records. Kakkanad parent filtering
+was also checked live. These are sampled lookups, not an exhaustive location catalog.
+
+Native JSON requests have a 15-second absolute deadline and a 1 MiB response limit.
+Browser picker requests have a 30-second deadline and may return only one match
+when each further selection requires navigation. Successful queries are cached
+for ten minutes, at most 200 entries per domain. Identical pending queries share
+one fetch; cancelling one caller does not cancel another caller's shared fetch.
 There is no persistent catalog or database.
 
 ## Verification
@@ -65,40 +73,52 @@ npm run test:live:mcp -- --image=olx-mcp:local
 npm run test:live:mcp -- --image=olx-mcp:local olx.kz olx.uz
 ```
 
-The check connects through a real MCP client, looks up a city, searches with its
-canonical value, retrieves details, and requests a second page when available.
-If lookup fails, it also attempts countrywide search to distinguish lookup from
-listing failures. Any failed required operation gives a nonzero exit status.
-Only verification summaries are printed; listing and seller contents are not
-stored as fixtures.
+The default matrix covers all ten countries through a real MCP client. It checks
+location lookup where implemented, search with the returned value, listing
+details and a second page where available. India also checks countrywide
+pagination and the Mumbai alias. Listing details and pagination are checked
+independently so a detail failure does not hide pagination status. Failed lookup
+also triggers countrywide search to distinguish lookup from listing failures.
+Any required failure produces a nonzero exit status. Only operation status and
+timing summaries are printed; listing and seller contents are not retained.
 
 Live Docker MCP checks on 2026-10-01:
 
-| Domain       | Location lookup                                       | Search, details and pagination                                            |
-| ------------ | ----------------------------------------------------- | ------------------------------------------------------------------------- |
-| `olx.kz`     | Passed for Алматы (`alma-ata`)                        | Passed with the returned location                                         |
-| `olx.uz`     | Passed for Ташкент (`tashkent`)                       | Passed with server-rendered search pages                                  |
-| `olx.pl`     | Outside this lookup tool's scope                      | Search passed; detail passed earlier but a repeat missed its title marker |
-| `olx.pt`     | Outside this lookup tool's scope                      | Passed with server-rendered search pages                                  |
-| `olx.com.br` | HTTP 403                                              | HTTP 403; selectors remain unverified live                                |
-| `olx.co.id`  | Jakarta Selatan picker exceeded the provider deadline | Countrywide search, details and load-more pagination passed               |
-| `olx.in`     | Aluva picker exceeded the provider deadline           | Countrywide and Mumbai search/details passed; pagination not verified     |
+| Domain       | Location lookup                          | Search, details and pagination                                                   |
+| ------------ | ---------------------------------------- | -------------------------------------------------------------------------------- |
+| `olx.pt`     | Outside this lookup tool's scope         | Passed                                                                           |
+| `olx.pl`     | Outside this lookup tool's scope         | Passed with server-rendered details                                              |
+| `olx.bg`     | Outside this lookup tool's scope         | Passed                                                                           |
+| `olx.ro`     | Outside this lookup tool's scope         | Passed                                                                           |
+| `olx.ua`     | Outside this lookup tool's scope         | Passed                                                                           |
+| `olx.kz`     | Passed for Алматы (`alma-ata`)           | Passed with the returned location                                                |
+| `olx.uz`     | Passed for Ташкент (`tashkent`)          | Passed with server-rendered search                                               |
+| `olx.co.id`  | Passed for Jakarta Selatan (`_g4000030`) | Passed with the returned location and a distinct second batch                    |
+| `olx.in`     | Passed for Aluva (`_g4395807`)           | Aluva and Mumbai search/details passed; distinct countrywide second batch passed |
+| `olx.com.br` | HTTP 403                                 | HTTP 403; selectors remain unverified live                                       |
 
-The runtime uses full Chromium with its new headless mode. The smaller headless
-shell failed India and Indonesia navigation with HTTP/2 stream resets in this
-environment. Portugal and Uzbekistan searches disable JavaScript to preserve
-server-rendered cards when client-side chunks fail; detail and location pages
-retain JavaScript. Indonesia retries an ignored load-more click once after a
-bounded wait with no additional cards.
+The runtime uses full Chromium in new headless mode. The smaller headless shell
+failed India and Indonesia navigation with HTTP/2 stream resets in this environment.
+European and Central Asian search pages disable JavaScript and read the populated
+server-rendered cards, avoiding dependencies on client chunks and hydration. Polish details disable JavaScript and select the title
+heading separately from action controls. Other detail pages and browser pickers
+retain JavaScript. India and Indonesia retry an ignored load-more click once after
+a bounded wait without new cards. Navigation waits for DOM content, followed by
+explicit readiness checks, rather than network idle.
 
-These checks sample particular queries, cities and first-page listings; they do
-not verify every category, filter or locality. Complete India coverage remains
-unestablished. Blocked pages, HTTP errors, absent recognizable result markers,
-and TLS failures are failures, never successful empty searches.
+These checks sample particular queries, cities and listings. They do not establish
+exhaustive support for every category, filter or locality. Complete India coverage
+remains unestablished. HTTP errors, blocked pages, TLS failures and absent recognized
+result markers are failures, never successful empty searches.
+
+Brazil's documented APIs cover an advertiser's own listings and require OAuth;
+they do not provide an anonymous replacement for public marketplace search.
+[Published listings API](https://developers.olx.com.br/anuncio/api/published_ads.html),
+[OAuth](https://developers.olx.com.br/anuncio/api/oauth.html).
 
 ## Primary references
 
-- [Brazil categories and site navigation](https://www.olx.com.br/mapa-do-site)
+- [Brazil site navigation](https://www.olx.com.br/mapa-do-site)
 - [Indonesia search and load-more behavior](https://www.olx.co.id/items/q-laptop)
 - [Indonesia city directory](https://www.olx.co.id/sitemap/cities)
 - [Kazakhstan search](https://www.olx.kz/list/q-laptop/)

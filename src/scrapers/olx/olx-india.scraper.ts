@@ -1,10 +1,10 @@
 import { Browser } from 'playwright';
 
 import { ListingId } from '../../core/types.js';
-import { BaseOlxScraper } from './base-olx.scraper.js';
+import { LoadMoreOlxScraper } from './load-more-olx.scraper.js';
 
 /** OLX India uses /items search paths and iid-based listing URLs. */
-export class OLXIndiaScraper extends BaseOlxScraper {
+export class OLXIndiaScraper extends LoadMoreOlxScraper {
   constructor(browser: Browser) {
     super('olx.in', browser);
   }

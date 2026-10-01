@@ -5,7 +5,7 @@ scope. Adapters are implemented for these priorities; live verification status i
 
 Improve India location discovery first. The current India adapter accepts
 mapped cities and canonical location slugs; live lookup is now exposed through `searchLocations`, but
-complete locality coverage depends on the public picker and directory. OLX publishes [city](https://www.olx.in/sitemap/cities) and
+complete locality coverage depends on the public native autocomplete data. Numeric-ID search routes were verified using Aluva and Surabaya; the runtime no longer depends on selecting each suggestion in the browser. OLX publishes [city](https://www.olx.in/sitemap/cities) and
 [region](https://www.olx.in/sitemap/regions) directories. A location lookup tool
 should return canonical identifiers and state information, handle duplicate city
 names, and support the locations OLX actually serves rather than inventing URLs.

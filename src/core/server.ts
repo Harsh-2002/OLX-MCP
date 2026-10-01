@@ -7,6 +7,7 @@ import { ToolRegistry } from './tool-registry.js';
 import { SearchListingsTool } from '../tools/search/search-listings.tool.js';
 import { GetListingDetailsTool } from '../tools/listing/get-listing-details.tool.js';
 import { LocationService } from '../locations/location-service.js';
+import { OlxLocationProvider } from '../locations/native-location-provider.js';
 import { BrowserLocationProvider } from '../locations/browser-location-provider.js';
 import { SearchLocationsTool } from '../tools/locations/search-locations.tool.js';
 import { OlxScraperFactory } from '../scrapers/olx/scraper.factory.js';
@@ -59,7 +60,9 @@ export class OLXMCPServer {
     // Create scraper factory
     this.scraperFactory = new OlxScraperFactory(this.browser);
 
-    this.locationService = new LocationService(new BrowserLocationProvider(this.browser));
+    this.locationService = new LocationService(
+      new OlxLocationProvider(new BrowserLocationProvider(this.browser))
+    );
 
     // Register tools
     this.registry

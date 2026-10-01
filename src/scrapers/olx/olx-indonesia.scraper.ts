@@ -1,11 +1,10 @@
-import type { Browser, Page } from 'playwright';
-import type { ListingId, SearchFilters, Listing } from '../../core/types.js';
+import type { Browser } from 'playwright';
+import type { ListingId, SearchFilters } from '../../core/types.js';
 import { NonRetryableError } from '../base/scraper.interface.js';
-import { BaseOlxScraper } from './base-olx.scraper.js';
+import { LoadMoreOlxScraper } from './load-more-olx.scraper.js';
 
 /** Indonesia uses iid URLs and load-more navigation rather than European paging. */
-export class OLXIndonesiaScraper extends BaseOlxScraper {
-  private readonly offsets = new WeakMap<Page, number>();
+export class OLXIndonesiaScraper extends LoadMoreOlxScraper {
   constructor(browser: Browser) {
     super('olx.co.id', browser);
   }
@@ -21,11 +20,7 @@ export class OLXIndonesiaScraper extends BaseOlxScraper {
         'Indonesia currently supports query, canonical location, and limit; other filters are not verified'
       );
     }
-    if ((filters.page ?? 1) > 10)
-      throw new NonRetryableError(
-        'Indonesia load-more pagination is limited to 10 batches per call'
-      );
-    return super.buildSearchUrl({ ...filters, page: 1 });
+    return super.buildSearchUrl(filters);
   }
 
   protected override extractListingId(url: string): ListingId {
@@ -41,60 +36,5 @@ export class OLXIndonesiaScraper extends BaseOlxScraper {
     throw new NonRetryableError(
       'Search Indonesia first to cache the canonical URL for this listing ID'
     );
-  }
-
-  protected override async prepareSearchPage(page: Page, filters: SearchFilters): Promise<void> {
-    const selector = this.domainConfig.selectors.search.listingCard;
-    const cards = page.locator(selector);
-    let offset = 0;
-    for (let batch = 1; batch < (filters.page ?? 1); batch++) {
-      offset = await cards.count();
-      const more = page.getByRole('button', { name: /muat lainnya/i });
-      if (!(await more.count()) || !(await more.isVisible())) break;
-      await more.click();
-      const waitForMore = () =>
-        page.waitForFunction(
-          ({ selector, count }) => document.querySelectorAll(selector).length > count,
-          { selector, count: offset },
-          { timeout: 10000 }
-        );
-      try {
-        await waitForMore();
-      } catch (error) {
-        // Server-rendered controls can accept a click before hydration installs handlers.
-        if (!(error instanceof Error) || error.name !== 'TimeoutError') throw error;
-        if ((await cards.count()) <= offset) {
-          await more.click();
-          await waitForMore();
-        }
-      }
-    }
-    this.offsets.set(page, offset);
-  }
-
-  protected override async isKnownEmptyPage(page: Page, filters: SearchFilters): Promise<boolean> {
-    return (this.offsets.get(page) ?? 0) > 0 || super.isKnownEmptyPage(page, filters);
-  }
-
-  protected override async extractListings(
-    page: Page,
-    limit?: number
-  ): Promise<{ listings: Listing[]; cardCount: number }> {
-    return super.extractListings(page, limit, this.offsets.get(page) ?? 0);
-  }
-
-  protected override async extractPaginationInfo(
-    page: Page,
-    currentPage: number,
-    cardCount: number
-  ) {
-    const info = await super.extractPaginationInfo(page, currentPage, cardCount);
-    const more = page.getByRole('button', { name: /muat lainnya/i });
-    const hasNextPage = Boolean((await more.count()) && (await more.isVisible()));
-    return {
-      ...info,
-      hasNextPage,
-      totalPages: Math.max(info.totalPages, currentPage + (hasNextPage ? 1 : 0)),
-    };
   }
 }

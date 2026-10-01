@@ -44,7 +44,7 @@ export const INDIA_SELECTORS: DomainSelectors = {
     image: '[data-aut-id="itemImage"] img',
     link: 'a[href*="/item/"][href*="iid-"]',
     publishDate: '[data-aut-id="itemDate"]',
-    nextPage: 'a[data-aut-id="arrowRight"]',
+    nextPage: 'button[data-aut-id="btnLoadMore"]',
     totalCount: '[data-aut-id="searchTextPage"] + span',
   },
   detail: {
@@ -182,7 +182,7 @@ const BRAZIL_SELECTORS: DomainSelectors = {
 };
 
 const buildIndonesiaSearchPath = (location?: string, query?: string): string => {
-  if (location && !/^[a-z0-9-]+_[gr]\d+$/i.test(location)) {
+  if (location && !/^(?:[a-z0-9-]+_[gr]\d+|_g[1-9]\d*)$/i.test(location)) {
     throw new Error('Use searchLocations to obtain a canonical Indonesia location');
   }
   const base = `${location ? `/${location}` : ''}/items/`;
@@ -208,24 +208,31 @@ export const OLX_DOMAIN_CONFIGS: Record<OlxDomain, DomainConfig> = {
   },
 
   'olx.pl': {
+    searchJavaScriptEnabled: false,
+    detailJavaScriptEnabled: false,
     domain: 'olx.pl',
     baseUrl: 'https://www.olx.pl',
     currency: 'PLN',
     language: 'pl',
-    selectors: COMMON_SELECTORS,
+    selectors: {
+      ...COMMON_SELECTORS,
+      detail: { ...COMMON_SELECTORS.detail, title: '[data-testid="offer_title"] h4' },
+    },
     urlPatterns: { searchPath: buildSearchPath('/oferty/', POLISH_FOLDING), ...COMMON_URL_PARAMS },
   },
 
   'olx.bg': {
+    searchJavaScriptEnabled: false,
     domain: 'olx.bg',
     baseUrl: 'https://www.olx.bg',
-    currency: 'BGN',
+    currency: 'EUR',
     language: 'bg',
     selectors: COMMON_SELECTORS,
     urlPatterns: { searchPath: buildSearchPath('/ads/'), ...COMMON_URL_PARAMS },
   },
 
   'olx.ro': {
+    searchJavaScriptEnabled: false,
     domain: 'olx.ro',
     baseUrl: 'https://www.olx.ro',
     currency: 'RON',
@@ -235,6 +242,7 @@ export const OLX_DOMAIN_CONFIGS: Record<OlxDomain, DomainConfig> = {
   },
 
   'olx.ua': {
+    searchJavaScriptEnabled: false,
     domain: 'olx.ua',
     baseUrl: 'https://www.olx.ua',
     currency: 'UAH',
@@ -244,7 +252,9 @@ export const OLX_DOMAIN_CONFIGS: Record<OlxDomain, DomainConfig> = {
   },
 
   'olx.in': {
+    loadMoreButtonName: '^load more$',
     locationSuggestionsPath: '/api/locations/autocomplete',
+    locationIdRoutePrefix: '_g',
     locationSearchSubmit: '[data-aut-id="btnSearch"]:visible',
     domain: 'olx.in',
     baseUrl: 'https://www.olx.in',
@@ -268,7 +278,9 @@ export const OLX_DOMAIN_CONFIGS: Record<OlxDomain, DomainConfig> = {
     },
   },
   'olx.co.id': {
+    loadMoreButtonName: '^muat lainnya$',
     locationSuggestionsPath: '/api/locations/autocomplete',
+    locationIdRoutePrefix: '_g',
     locationSearchSubmit: '[data-aut-id="btnSearch"]:visible',
     domain: 'olx.co.id',
     baseUrl: 'https://www.olx.co.id',
@@ -284,6 +296,7 @@ export const OLX_DOMAIN_CONFIGS: Record<OlxDomain, DomainConfig> = {
     urlPatterns: { searchPath: buildIndonesiaSearchPath, ...COMMON_URL_PARAMS },
   },
   'olx.kz': {
+    searchJavaScriptEnabled: false,
     domain: 'olx.kz',
     baseUrl: 'https://www.olx.kz',
     currency: 'KZT',

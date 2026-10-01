@@ -166,8 +166,8 @@ export abstract class BaseOlxScraper extends PlaywrightScraper<SearchFilters, Se
   protected async prepareSearchPage(_page: Page, _filters: SearchFilters): Promise<void> {}
 
   /** India keeps analytics connections open, so it must not wait for network idle. */
-  protected getNavigationWaitUntil(): 'networkidle' | 'domcontentloaded' {
-    return 'networkidle';
+  protected getNavigationWaitUntil(): 'domcontentloaded' {
+    return 'domcontentloaded';
   }
 
   /** A domain may use a summary element as its ready signal when there are no cards. */
@@ -359,79 +359,87 @@ export abstract class BaseOlxScraper extends PlaywrightScraper<SearchFilters, Se
     signal?: AbortSignal,
     options: ListingDetailsOptions = {}
   ): Promise<Listing> {
-    return await this.withPage(async page => {
-      let finalUrl = '';
+    return await this.withPage(
+      async page => {
+        let finalUrl = '';
 
-      // First check if we have the URL cached from a previous search
-      const cachedUrl = this.urlCache.get(listingId);
-      if (cachedUrl) {
-        finalUrl = cachedUrl;
-      } else {
-        // Some domains expose a stable direct listing route; others need search.
-        finalUrl =
-          this.getDirectListingUrl(listingId) || (await this.findListingUrl(listingId, page));
-      }
+        // First check if we have the URL cached from a previous search
+        const cachedUrl = this.urlCache.get(listingId);
+        if (cachedUrl) {
+          finalUrl = cachedUrl;
+        } else {
+          // Some domains expose a stable direct listing route; others need search.
+          finalUrl =
+            this.getDirectListingUrl(listingId) || (await this.findListingUrl(listingId, page));
+        }
 
-      if (!finalUrl) {
-        throw new Error(
-          `Listing with ID ${listingId} not found. Try searching first to cache the URL.`
-        );
-      }
+        if (!finalUrl) {
+          throw new Error(
+            `Listing with ID ${listingId} not found. Try searching first to cache the URL.`
+          );
+        }
 
-      // Navigate to the listing page
-      const response = await page.goto(finalUrl, { waitUntil: this.getNavigationWaitUntil() });
-      await assertPageAccessible(page, response);
-      await this.waitForListingDetails(page);
+        // Navigate to the listing page
+        const response = await page.goto(finalUrl, { waitUntil: this.getNavigationWaitUntil() });
+        await assertPageAccessible(page, response);
+        await this.waitForListingDetails(page);
 
-      if (signal?.aborted) {
-        throw new Error('Operation cancelled');
-      }
+        if (signal?.aborted) {
+          throw new Error('Operation cancelled');
+        }
 
-      const detail = this.domainConfig.selectors.detail;
-      // Absent flags mean "include", matching the MCP tool schema defaults;
-      // normalization happens once here so the branches below stay uniform.
-      const includeImages = options.includeImages ?? true;
-      const includeSellerInfo = options.includeSellerInfo ?? true;
+        const detail = this.domainConfig.selectors.detail;
+        // Absent flags mean "include", matching the MCP tool schema defaults;
+        // normalization happens once here so the branches below stay uniform.
+        const includeImages = options.includeImages ?? true;
+        const includeSellerInfo = options.includeSellerInfo ?? true;
 
-      if (includeImages && this.shouldWaitForImages()) {
-        await page.waitForSelector(detail.images, { timeout: 10000 }).catch(() => {});
-      }
+        if (includeImages && this.shouldWaitForImages()) {
+          await page.waitForSelector(detail.images, { timeout: 10000 }).catch(() => {});
+        }
 
-      const [title, price, description, location, images, seller] = await Promise.all([
-        readText(page, detail.title),
-        // Read through the extractor rather than readOptionalText: the price
-        // container also holds a sibling negotiable badge ("Negociável", "do
-        // negocjacji") that textContent would glue onto the amount.
-        page.$eval(detail.price, extractDetailPriceText).catch(() => ''),
-        // Read through the extractor rather than readOptionalText: the
-        // description container opens with a localised heading that the
-        // container's own textContent would prepend to every description.
-        page.$eval(detail.description, extractDescriptionText).catch(() => ''),
-        // Same label-leak problem as the description: the map section opens
-        // with a localised "Localização" heading that textContent would
-        // prepend to the address.
-        page.$eval(detail.location, extractLocationText).catch(() => ''),
-        includeImages
-          ? page.$$eval(detail.images, extractGalleryImages).catch(() => [] as string[])
-          : Promise.resolve([] as string[]),
-        includeSellerInfo ? this.extractSellerInfo(page) : Promise.resolve(undefined),
-      ]);
+        const [title, price, description, location, images, seller] = await Promise.all([
+          readText(page, detail.title),
+          // Read through the extractor rather than readOptionalText: the price
+          // container also holds a sibling negotiable badge ("Negociável", "do
+          // negocjacji") that textContent would glue onto the amount.
+          page.$eval(detail.price, extractDetailPriceText).catch(() => ''),
+          // Read through the extractor rather than readOptionalText: the
+          // description container opens with a localised heading that the
+          // container's own textContent would prepend to every description.
+          page.$eval(detail.description, extractDescriptionText).catch(() => ''),
+          // Same label-leak problem as the description: the map section opens
+          // with a localised "Localização" heading that textContent would
+          // prepend to the address.
+          page.$eval(detail.location, extractLocationText).catch(() => ''),
+          includeImages
+            ? page.$$eval(detail.images, extractGalleryImages).catch(() => [] as string[])
+            : Promise.resolve([] as string[]),
+          includeSellerInfo ? this.extractSellerInfo(page) : Promise.resolve(undefined),
+        ]);
 
-      return {
-        id: listingId,
-        title,
-        price,
-        location,
-        description: description || undefined,
-        // The first gallery image doubles as the listing's thumbnail, matching
-        // the shape search results return. Skipped parts stay absent rather
-        // than empty so callers can tell "opted out" from "none found".
-        imageUrl: includeImages ? images[0] : undefined,
-        images: includeImages && images.length > 0 ? images : undefined,
-        url: finalUrl,
-        seller,
-      };
-    }, signal);
+        return {
+          id: listingId,
+          title,
+          price,
+          location,
+          description: description || undefined,
+          // The first gallery image doubles as the listing's thumbnail, matching
+          // the shape search results return. Skipped parts stay absent rather
+          // than empty so callers can tell "opted out" from "none found".
+          imageUrl: includeImages ? images[0] : undefined,
+          images: includeImages && images.length > 0 ? images : undefined,
+          url: finalUrl,
+          seller,
+        };
+      },
+      signal,
+      this.domainConfig.detailJavaScriptEnabled === undefined
+        ? {}
+        : {
+            javaScriptEnabled: this.domainConfig.detailJavaScriptEnabled,
+          }
+    );
   }
 
   /**

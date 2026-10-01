@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { OlxScraperFactory } from './scraper.factory.js';
 import { OLXBrazilScraper } from './olx-brazil.scraper.js';
+import { OLXIndiaScraper } from './olx-india.scraper.js';
 import { OLXIndonesiaScraper } from './olx-indonesia.scraper.js';
 import { OLXCentralAsiaScraper } from './olx-central-asia.scraper.js';
 import { OLX_DOMAINS } from '../../core/domains.js';
@@ -133,7 +134,7 @@ describe('country routing and URL behavior', () => {
   });
 });
 
-describe('Indonesia load-more pagination', () => {
+describe.each(['olx.in', 'olx.co.id'] as const)('%s load-more pagination', domain => {
   function setup() {
     const { browser, page } = createPlaywrightMocks();
     const { mockPage } = setupOLXScrapingMocks();
@@ -157,12 +158,17 @@ describe('Indonesia load-more pagination', () => {
     mockPage.$$eval.mockImplementation(async selector =>
       selector.includes('itemBox') ? cards.slice(0, count) : []
     );
-    return { scraper: new OLXIndonesiaScraper(browser), page, more };
+    return {
+      scraper:
+        domain === 'olx.in' ? new OLXIndiaScraper(browser) : new OLXIndonesiaScraper(browser),
+      page,
+      more,
+    };
   }
   it('loads a second batch and returns only its listings', async () => {
     const { scraper, page, more } = setup();
     const result = await scraper.scrape({
-      domain: 'olx.co.id',
+      domain,
       query: 'laptop',
       page: 2,
       limit: 1,
@@ -181,7 +187,7 @@ describe('Indonesia load-more pagination', () => {
     const timeout = new Error('No new cards');
     timeout.name = 'TimeoutError';
     (page.waitForFunction as any).mockRejectedValueOnce(timeout);
-    const result = await scraper.scrape({ domain: 'olx.co.id', query: 'laptop', page: 2 });
+    const result = await scraper.scrape({ domain, query: 'laptop', page: 2 });
     assertIsSuccess(result);
     expect(result.data.listings.map(row => row.id)).toEqual(['2']);
     expect(more.click).toHaveBeenCalledTimes(2);
@@ -190,13 +196,14 @@ describe('Indonesia load-more pagination', () => {
   it('returns no further listings when load-more is absent', async () => {
     const { scraper, more } = setup();
     more.count.mockResolvedValue(0);
-    const result = await scraper.scrape({ domain: 'olx.co.id', query: 'laptop', page: 2 });
+    const result = await scraper.scrape({ domain, query: 'laptop', page: 2 });
     assertIsSuccess(result);
     expect(result.data.listings).toEqual([]);
     expect(result.data.hasNextPage).toBe(false);
   });
   it('rejects unverified filters and bounds load-more work', () => {
-    const { scraper } = setup();
+    const { browser } = createPlaywrightMocks();
+    const scraper = new OLXIndonesiaScraper(browser);
     const build = (scraper as any).buildSearchUrl.bind(scraper);
     expect(() => build({ domain: 'olx.co.id', query: 'laptop', minPrice: 0 })).toThrow(
       'not verified'

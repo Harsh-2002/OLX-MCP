@@ -3,8 +3,8 @@
 An MCP server for searching OLX listings and getting listing details.
 
 Country adapters cover Portugal, Poland, Bulgaria, Romania, Ukraine, India,
-Brazil, Indonesia, Kazakhstan, and Uzbekistan. Brazil and Indonesia remain
-experimental; Kazakhstan and Uzbekistan passed live MCP checks. See [Country capabilities](docs/countries.md).
+Brazil, Indonesia, Kazakhstan, and Uzbekistan. Brazil remains
+experimental because live requests are blocked; live verification results are tracked per country. See [Country capabilities](docs/countries.md).
 
 ## Setup
 
@@ -71,8 +71,8 @@ sorting. Indonesia supports query, canonical location, limit, and up to ten
 load-more batches; category, price, and custom sort filters return an explicit
 unsupported-filter error.
 
-For India, use a supported city name such as Mumbai or Bengaluru, or an explicit
-OLX location slug such as `mumbai_g4058997`.
+India also supports up to ten load-more batches. For locations, use a supported city name such as Mumbai or Bengaluru, or an explicit
+OLX route such as `mumbai_g4058997` or a numeric route returned by `searchLocations`.
 
 ### `searchLocations`
 
@@ -94,7 +94,7 @@ resolved live. Ambiguous names require a canonical value from this tool.
 
 Lookup needs network access. Successful results are cached for ten minutes;
 failed refreshes do not serve expired data. OLX may restrict automated access,
-and its city directories do not guarantee coverage of every locality.
+and sampled checks do not establish coverage of every locality.
 
 ### `getListingDetails`
 
