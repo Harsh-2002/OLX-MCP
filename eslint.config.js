@@ -54,7 +54,7 @@ export default [
     },
   },
   {
-    files: ['tests/**/*.ts', 'tests/**/*.js', '**/*.js'],
+    files: ['tests/**/*.ts', 'tests/**/*.js', '**/*.js', '**/*.mjs'],
     languageOptions: {
       globals: {
         console: 'readonly',

@@ -117,3 +117,11 @@ small protected hooks in a scraper subclass. Add a tool only when its scraper
 behavior and input/output contract are implemented, then register it in the server.
 
 See [Testing](../tests/README.md) for mocked and live validation boundaries.
+
+## Container packaging
+
+The multistage `Dockerfile` compiles TypeScript and installs production
+dependencies in separate stages. The non-root runtime includes only the
+application, production dependencies, headless Chromium, its system libraries,
+and Tini. The image uses the same stdio entry point as a source installation.
+See [Docker](docker.md) for build, client configuration, and offline smoke checks.

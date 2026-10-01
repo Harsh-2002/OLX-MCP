@@ -34,6 +34,16 @@ Add this to your MCP client configuration, using your checkout's absolute path:
 
 Restart the client after updating the configuration.
 
+## Docker
+
+```bash
+docker build -t olx-mcp:local .
+docker run --rm -i olx-mcp:local
+```
+
+The image includes Chromium and runs the stdio MCP server. See
+[Docker](docs/docker.md) for client configuration and image checks.
+
 ## Tools
 
 ### `searchListings`

@@ -39,7 +39,8 @@
     "type-check": "tsc --noEmit --incremental false",
     "clean": "node --input-type=module -e \"import { rmSync } from 'node:fs'; for (const path of ['dist', 'coverage']) rmSync(path, { recursive: true, force: true });\"",
     "ci": "npm run lint && npm run format:check && npm run type-check && npm run test:coverage && npm run build",
-    "prepublishOnly": "npm run ci"
+    "prepublishOnly": "npm run ci",
+    "test:docker": "node scripts/test-docker.mjs"
   },
   "keywords": [
     "mcp",

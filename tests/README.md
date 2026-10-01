@@ -72,3 +72,10 @@ in CI and does not establish that all six sites work.
 
 Report live checks separately from mocked test results. Do not record real seller
 contact details, credentials, or private browsing data in test fixtures.
+
+## Docker checks
+
+Build the image with `docker build -t olx-mcp:local .`, then run
+`npm run test:docker`. These checks launch real Chromium and connect to the
+container's stdio MCP server with network access disabled. They are separate
+from the mocked suite and live OLX checks. See [Docker](../docs/docker.md).
