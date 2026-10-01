@@ -27,8 +27,12 @@ export abstract class PlaywrightScraper<TQuery, TResult> implements IScraper<TQu
   abstract scrape(query: TQuery, signal?: AbortSignal): Promise<Result<TResult>>;
   abstract validateQuery(query: unknown): query is TQuery;
 
-  protected async withPage<T>(fn: (page: Page) => Promise<T>, signal?: AbortSignal): Promise<T> {
-    const newPageOptions: Parameters<typeof this.browser.newPage>[0] = {};
+  protected async withPage<T>(
+    fn: (page: Page) => Promise<T>,
+    signal?: AbortSignal,
+    options: { javaScriptEnabled?: boolean } = {}
+  ): Promise<T> {
+    const newPageOptions: Parameters<typeof this.browser.newPage>[0] = { ...options };
     if (this.config.userAgent) {
       newPageOptions.userAgent = this.config.userAgent;
     }

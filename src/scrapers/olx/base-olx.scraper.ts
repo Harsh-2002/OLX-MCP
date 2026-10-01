@@ -59,55 +59,59 @@ export abstract class BaseOlxScraper extends PlaywrightScraper<SearchFilters, Se
   }
 
   private async performSearch(filters: SearchFilters, signal?: AbortSignal): Promise<SearchResult> {
-    return await this.withPage(async page => {
-      const searchUrl = this.buildSearchUrl(filters);
+    return await this.withPage(
+      async page => {
+        const searchUrl = this.buildSearchUrl(filters);
 
-      const response = await page.goto(searchUrl, { waitUntil: this.getNavigationWaitUntil() });
-      await assertPageAccessible(page, response);
-      await this.waitForSearchResults(page);
-      await this.prepareSearchPage(page, filters);
+        const response = await page.goto(searchUrl, { waitUntil: this.getNavigationWaitUntil() });
+        await assertPageAccessible(page, response);
+        await this.waitForSearchResults(page);
+        await this.prepareSearchPage(page, filters);
 
-      if (signal?.aborted) {
-        throw new Error('Operation cancelled');
-      }
+        if (signal?.aborted) {
+          throw new Error('Operation cancelled');
+        }
 
-      const currentPage = filters.page || 1;
-      const { listings, cardCount } = await this.extractListings(page, filters.limit);
-      const pagination = await this.extractPaginationInfo(page, currentPage, cardCount);
+        const currentPage = filters.page || 1;
+        const { listings, cardCount } = await this.extractListings(page, filters.limit);
+        const pagination = await this.extractPaginationInfo(page, currentPage, cardCount);
 
-      // The card selector going stale yields no cards at all, so extractListings
-      // cannot see it. A result count read through an unrelated selector can:
-      // "OLX says there are matches but we parsed none" is never a real state.
-      // Only meaningful on the first page — paging past the end legitimately
-      // returns nothing.
-      if (
-        listings.length === 0 &&
-        cardCount === 0 &&
-        pagination.totalCount > 0 &&
-        currentPage === 1
-      ) {
-        throw new NonRetryableError(
-          `${this.domainConfig.domain} reports ${pagination.totalCount} results but no listing ` +
-            `cards matched "${this.domainConfig.selectors.search.listingCard}" — the card selector is likely stale.`
-        );
-      }
+        // The card selector going stale yields no cards at all, so extractListings
+        // cannot see it. A result count read through an unrelated selector can:
+        // "OLX says there are matches but we parsed none" is never a real state.
+        // Only meaningful on the first page — paging past the end legitimately
+        // returns nothing.
+        if (
+          listings.length === 0 &&
+          cardCount === 0 &&
+          pagination.totalCount > 0 &&
+          currentPage === 1
+        ) {
+          throw new NonRetryableError(
+            `${this.domainConfig.domain} reports ${pagination.totalCount} results but no listing ` +
+              `cards matched "${this.domainConfig.selectors.search.listingCard}" — the card selector is likely stale.`
+          );
+        }
 
-      if (
-        !cardCount &&
-        !pagination.totalCount &&
-        this.domainConfig.selectors.search.emptyState &&
-        !(await this.isKnownEmptyPage(page, filters))
-      ) {
-        throw new NonRetryableError(
-          `No recognized listing or empty-result markers on ${this.domainConfig.domain}; the page may be blocked or selectors changed`
-        );
-      }
+        if (
+          !cardCount &&
+          !pagination.totalCount &&
+          this.domainConfig.selectors.search.emptyState &&
+          !(await this.isKnownEmptyPage(page, filters))
+        ) {
+          throw new NonRetryableError(
+            `No recognized listing or empty-result markers on ${this.domainConfig.domain}; the page may be blocked or selectors changed`
+          );
+        }
 
-      return {
-        listings,
-        ...pagination,
-      };
-    }, signal);
+        return {
+          listings,
+          ...pagination,
+        };
+      },
+      signal,
+      this.domainConfig.searchJavaScriptEnabled === false ? { javaScriptEnabled: false } : {}
+    );
   }
 
   protected buildSearchUrl(filters: SearchFilters): string {

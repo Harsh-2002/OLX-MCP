@@ -52,11 +52,22 @@ export class OLXIndonesiaScraper extends BaseOlxScraper {
       const more = page.getByRole('button', { name: /muat lainnya/i });
       if (!(await more.count()) || !(await more.isVisible())) break;
       await more.click();
-      await page.waitForFunction(
-        ({ selector, count }) => document.querySelectorAll(selector).length > count,
-        { selector, count: offset },
-        { timeout: 10000 }
-      );
+      const waitForMore = () =>
+        page.waitForFunction(
+          ({ selector, count }) => document.querySelectorAll(selector).length > count,
+          { selector, count: offset },
+          { timeout: 10000 }
+        );
+      try {
+        await waitForMore();
+      } catch (error) {
+        // Server-rendered controls can accept a click before hydration installs handlers.
+        if (!(error instanceof Error) || error.name !== 'TimeoutError') throw error;
+        if ((await cards.count()) <= offset) {
+          await more.click();
+          await waitForMore();
+        }
+      }
     }
     this.offsets.set(page, offset);
   }

@@ -175,6 +175,18 @@ describe('Indonesia load-more pagination', () => {
     expect((page.goto as any).mock.calls[0][0]).not.toContain('page=');
     expect(page.close).toHaveBeenCalledOnce();
   });
+  it('retries an ignored pre-hydration click once', async () => {
+    const { scraper, page, more } = setup();
+    more.click.mockImplementationOnce(async () => {});
+    const timeout = new Error('No new cards');
+    timeout.name = 'TimeoutError';
+    (page.waitForFunction as any).mockRejectedValueOnce(timeout);
+    const result = await scraper.scrape({ domain: 'olx.co.id', query: 'laptop', page: 2 });
+    assertIsSuccess(result);
+    expect(result.data.listings.map(row => row.id)).toEqual(['2']);
+    expect(more.click).toHaveBeenCalledTimes(2);
+    expect(page.close).toHaveBeenCalledOnce();
+  });
   it('returns no further listings when load-more is absent', async () => {
     const { scraper, more } = setup();
     more.count.mockResolvedValue(0);

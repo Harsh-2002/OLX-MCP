@@ -58,6 +58,7 @@ describe('OLXMCPServer', () => {
       await server.initialize();
 
       expect(chromium.launch).toHaveBeenCalledWith({
+        channel: 'chromium',
         headless: true,
         args: [
           '--no-sandbox',
@@ -170,6 +171,7 @@ describe('OLXMCPServer', () => {
       await server.initialize();
 
       expect(chromium.launch).toHaveBeenCalledWith({
+        channel: 'chromium',
         headless: true,
         args: expect.arrayContaining([
           '--no-sandbox',

@@ -43,6 +43,7 @@ export class OLXMCPServer {
   async initialize(): Promise<void> {
     // Initialize browser
     this.browser = await chromium.launch({
+      channel: 'chromium',
       headless: this.config.headless ?? true,
       args: [
         '--no-sandbox',

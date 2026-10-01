@@ -52,7 +52,8 @@ Directory fallback cannot supply missing parent metadata or unlisted localities;
 those cases produce an explicit coverage error. Do not interpret that error as
 proof that a locality does not exist.
 
-Location calls have a 30-second provider deadline. Successful queries are cached
+Opaque pickers may return a single canonical match because each further selection
+requires another navigation. Location calls have a 30-second provider deadline. Successful queries are cached
 for ten minutes, at most 200 entries per domain; identical pending queries share
 one fetch. A caller can cancel without cancelling another caller's shared fetch.
 There is no persistent catalog or database.
@@ -73,15 +74,22 @@ stored as fixtures.
 
 Live Docker MCP checks on 2026-10-01:
 
-| Domain       | Location lookup                                    | Search, details and pagination                                              |
-| ------------ | -------------------------------------------------- | --------------------------------------------------------------------------- |
-| `olx.kz`     | Passed for Алматы (`alma-ata`)                     | Passed with the returned location                                           |
-| `olx.uz`     | Passed for Ташкент (`tashkent`)                    | Passed initially; a repeat pagination request returned an unrecognized page |
-| `olx.pl`     | Outside this lookup tool's scope                   | Passed on countrywide searches                                              |
-| `olx.pt`     | Outside this lookup tool's scope                   | Passed initially; a repeat returned an empty second page                    |
-| `olx.com.br` | HTTP 403                                           | HTTP 403; selectors remain unverified live                                  |
-| `olx.co.id`  | Browser HTTP/2 navigation failure                  | Browser HTTP/2 navigation failure                                           |
-| `olx.in`     | Browser HTTP/2 navigation failure for Aluva lookup | Same failure for countrywide and Mumbai searches                            |
+| Domain       | Location lookup                                       | Search, details and pagination                                            |
+| ------------ | ----------------------------------------------------- | ------------------------------------------------------------------------- |
+| `olx.kz`     | Passed for Алматы (`alma-ata`)                        | Passed with the returned location                                         |
+| `olx.uz`     | Passed for Ташкент (`tashkent`)                       | Passed with server-rendered search pages                                  |
+| `olx.pl`     | Outside this lookup tool's scope                      | Search passed; detail passed earlier but a repeat missed its title marker |
+| `olx.pt`     | Outside this lookup tool's scope                      | Passed with server-rendered search pages                                  |
+| `olx.com.br` | HTTP 403                                              | HTTP 403; selectors remain unverified live                                |
+| `olx.co.id`  | Jakarta Selatan picker exceeded the provider deadline | Countrywide search, details and load-more pagination passed               |
+| `olx.in`     | Aluva picker exceeded the provider deadline           | Countrywide and Mumbai search/details passed; pagination not verified     |
+
+The runtime uses full Chromium with its new headless mode. The smaller headless
+shell failed India and Indonesia navigation with HTTP/2 stream resets in this
+environment. Portugal and Uzbekistan searches disable JavaScript to preserve
+server-rendered cards when client-side chunks fail; detail and location pages
+retain JavaScript. Indonesia retries an ignored load-more click once after a
+bounded wait with no additional cards.
 
 These checks sample particular queries, cities and first-page listings; they do
 not verify every category, filter or locality. Complete India coverage remains

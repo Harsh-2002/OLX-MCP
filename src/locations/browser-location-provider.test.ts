@@ -24,9 +24,11 @@ function setup(domain: LocationQuery['domain'] = 'olx.in') {
     locator: vi
       .fn()
       .mockImplementation(selector =>
-        selector.includes('[role="option"]')
-          ? { count: vi.fn().mockResolvedValue(0) }
-          : { first: () => input }
+        selector.includes('btnSearch')
+          ? { first: () => opener }
+          : selector.includes('[role="option"]')
+            ? { count: vi.fn().mockResolvedValue(0) }
+            : { first: () => input }
       ),
     getByRole: vi.fn().mockReturnValue({ first: () => opener }),
     getByText: vi.fn().mockReturnValue({ count: vi.fn().mockResolvedValue(0) }),
@@ -80,12 +82,14 @@ describe('live public location provider', () => {
   });
 
   it('selects opaque suggestions and reads the canonical route supplied by the UI', async () => {
-    const { provider, page, input, setUrl } = setup();
+    const { provider, page, input, opener, setUrl } = setup();
     const option = {
-      click: vi
-        .fn()
-        .mockImplementation(async () => setUrl('https://www.olx.in/aluva_g4395807/items/q-laptop')),
+      click: vi.fn().mockResolvedValue(undefined),
     };
+    opener.count.mockResolvedValue(1);
+    opener.click.mockImplementation(async () =>
+      setUrl('https://www.olx.in/aluva_g4395807/items/q-laptop')
+    );
     const matched = { count: vi.fn().mockResolvedValue(1), first: () => option };
     const options = {
       count: vi.fn().mockResolvedValue(1),
@@ -93,14 +97,42 @@ describe('live public location provider', () => {
       filter: vi.fn().mockReturnValue(matched),
     };
     page.locator.mockImplementation(selector =>
-      selector.includes('[role="option"]') ? options : { first: () => input }
+      selector.includes('btnSearch')
+        ? { first: () => opener }
+        : selector.includes('[role="option"]')
+          ? options
+          : { first: () => input }
     );
     Object.assign(page, { waitForURL: vi.fn().mockResolvedValue(undefined) });
     expect(await provider.lookup({ domain: 'olx.in', query: 'Aluva', limit: 1 })).toEqual([
       { id: 'aluva_g4395807', name: 'Aluva', type: 'city', searchValue: 'aluva_g4395807' },
     ]);
+    expect(page.locator).toHaveBeenCalledWith('[data-aut-id="btnSearch"]:visible');
+    expect(opener.click).toHaveBeenCalledOnce();
     expect(options.filter).toHaveBeenCalledWith({ hasText: /^\s*Aluva\s*$/ });
+    const labelFilter = options.filter.mock.calls[0]?.[0].hasText as RegExp;
+    expect(labelFilter.test(' Aluva ')).toBe(true);
+    expect(labelFilter.test('Another Aluva')).toBe(false);
     expect(page.close).toHaveBeenCalledOnce();
+  });
+
+  it('waits for native autocomplete rather than unrelated location requests', async () => {
+    const { provider, input, page, emit } = setup();
+    input.fill.mockImplementation(async () =>
+      emit({ suggestions: [{ name: 'Aluva', slug: 'aluva_g4395807' }] })
+    );
+    await provider.lookup({ domain: 'olx.in', query: 'Aluva', limit: 1 });
+    const predicate = page.waitForResponse.mock.calls[0]?.[0] as unknown as (
+      response: Response
+    ) => boolean;
+    const response = (path: string) =>
+      ({
+        url: () => `https://www.olx.in${path}`,
+        ok: () => true,
+        headers: () => ({ 'content-type': 'application/json' }),
+      }) as Response;
+    expect(predicate(response('/api/locations/4395807/path'))).toBe(false);
+    expect(predicate(response('/api/locations/autocomplete?input=Aluva'))).toBe(true);
   });
 
   it('reads native geo-encoder response metadata', async () => {

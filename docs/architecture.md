@@ -4,7 +4,8 @@
 
 OLX MCP is a local stdio MCP server. It has no HTTP service, database,
 authentication system, background worker, or persistent listing store.
-It launches Chromium and reads public OLX search and detail pages.
+It launches full Chromium through Playwright's `chromium` channel in new headless
+mode and reads public OLX search and detail pages.
 
 The runtime dependencies are the MCP TypeScript SDK, Playwright, Zod, and
 `zod-to-json-schema`. TypeScript builds ESM output in `dist/`.
@@ -74,6 +75,10 @@ normalize selected diacritics; other non-ASCII query slugs are percent-encoded.
 The factory lazily creates and caches one scraper per requested domain. Each
 operation creates a new page via `browser.newPage()` and closes it in `finally`.
 The browser process is shared; pages do not retain an authenticated user session.
+Portugal and Uzbekistan search pages disable page JavaScript and read the
+server-rendered HTML. Their frontend can discard valid listing cards after a
+JavaScript chunk-loading failure. Detail pages and live location pickers retain
+JavaScript; Indonesia also needs it for load-more navigation.
 
 The default page timeout is 30 seconds. Operations make up to three attempts,
 with exponential backoff between failures. `NonRetryableError` bypasses retry

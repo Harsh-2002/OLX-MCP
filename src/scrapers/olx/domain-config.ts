@@ -198,6 +198,7 @@ const buildBrazilSearchPath = (location?: string): string => {
 
 export const OLX_DOMAIN_CONFIGS: Record<OlxDomain, DomainConfig> = {
   'olx.pt': {
+    searchJavaScriptEnabled: false,
     domain: 'olx.pt',
     baseUrl: 'https://www.olx.pt',
     currency: 'EUR',
@@ -243,6 +244,8 @@ export const OLX_DOMAIN_CONFIGS: Record<OlxDomain, DomainConfig> = {
   },
 
   'olx.in': {
+    locationSuggestionsPath: '/api/locations/autocomplete',
+    locationSearchSubmit: '[data-aut-id="btnSearch"]:visible',
     domain: 'olx.in',
     baseUrl: 'https://www.olx.in',
     currency: 'INR',
@@ -265,6 +268,8 @@ export const OLX_DOMAIN_CONFIGS: Record<OlxDomain, DomainConfig> = {
     },
   },
   'olx.co.id': {
+    locationSuggestionsPath: '/api/locations/autocomplete',
+    locationSearchSubmit: '[data-aut-id="btnSearch"]:visible',
     domain: 'olx.co.id',
     baseUrl: 'https://www.olx.co.id',
     currency: 'IDR',
@@ -293,6 +298,7 @@ export const OLX_DOMAIN_CONFIGS: Record<OlxDomain, DomainConfig> = {
     urlPatterns: { searchPath: buildSearchPath('/list/'), ...COMMON_URL_PARAMS },
   },
   'olx.uz': {
+    searchJavaScriptEnabled: false,
     domain: 'olx.uz',
     baseUrl: 'https://www.olx.uz',
     currency: 'UZS',

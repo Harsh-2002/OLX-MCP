@@ -20,7 +20,7 @@ async function main() {
   assert.throws(() => SearchListingsArgsSchema.parse({ query: 'test' }));
   assert.throws(() => SearchListingsArgsSchema.parse({ domain: 'olx.invalid', query: 'test' }));
 
-  const browser = await chromium.launch({ headless: true });
+  const browser = await chromium.launch({ channel: 'chromium', headless: true });
   let failures = 0;
 
   try {

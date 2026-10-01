@@ -10,13 +10,14 @@ The multistage Dockerfile builds with official Node.js 24 on Debian Bookworm
 and runs on Debian Bookworm slim. Both base images are pinned by digest. Only
 the Node.js executable is copied into the runtime; npm and build tools stay in
 the build stages. Build dependencies and TypeScript source stay in the build
-stage. The runtime contains compiled code, production dependencies, Chromium's
-headless shell, its system libraries, and Tini for signal forwarding and child
-process reaping. It runs as a non-root `node` user (UID 1000).
+stage. The runtime contains compiled code, production dependencies, full Chromium in its new headless mode, its system libraries, and Tini for signal forwarding and child
+process reaping. It runs as a non-root `node` user (UID 1000). Chromium config
+and cache directories use `/tmp` so its crash-handler initialization also works
+with a read-only root filesystem.
 
 The browser is installed through the lockfile's Playwright package, so its version
-matches the application. Firefox, WebKit, and the full headed Chromium browser
-are not installed. System libraries are installed explicitly, avoiding Xvfb and
+matches the application. The server selects Playwright's `chromium` channel.
+Firefox, WebKit, and the separate headless shell are not installed. System libraries are installed explicitly, avoiding Xvfb and
 Mesa drivers needed by headed browsers. Latin and Noto core fonts remain for
 text rendering, including Indian scripts. Local dependencies, Git metadata, credentials, assistant
 settings, and tests are excluded from the build context.
@@ -93,14 +94,14 @@ The base image can be overridden for local evaluation:
 docker build --build-arg NODE_IMAGE=node:24-bookworm-slim -t olx-mcp:custom .
 ```
 
-The current image supports the application's headless launch behavior. If a future
-change enables headed browsing or a browser channel, update the browser installation
-step and tests accordingly.
+The current image supports full Chromium in headless mode. Headed browsing still
+requires an external display and additional desktop configuration.
 
 ## Image size
 
-On linux/amd64, the optimized image reports approximately 847 MB through
-`docker image inspect`, compared with approximately 1.23 GB before optimization
-(about 31% smaller). This is the local Docker size metric, not a registry download
-size. Layer history totals approximately 620 MB uncompressed; reported storage
-can also include compressed layers depending on the Docker image store.
+Full Chromium replaces the smaller headless-shell build because live India and
+Indonesia requests failed with the shell and succeeded with full Chromium.
+On linux/amd64, the full-Chromium image reports approximately 1.07 GB
+(1,073,693,599 bytes) through `docker image inspect`, compared with about
+847 MB for the shell image. The increase is approximately 227 MB (27%).
+Docker local size is not a registry download size.

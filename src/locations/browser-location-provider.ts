@@ -149,20 +149,27 @@ export class BrowserLocationProvider implements LocationProvider {
         await page.waitForSelector(selector, { timeout: 5000 });
       }
       const exactLabel = new RegExp(
-        `^\\s*${label.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*$`
+        String.raw`^\s*${label.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\s*$`
       );
       const optionsForLabel = page.locator(selector).filter({ hasText: exactLabel });
       if ((await optionsForLabel.count()) !== 1) continue;
       const option = optionsForLabel.first();
       await option.click();
-      const search = page.getByRole('button', { name: /^(search|buscar|cari|поиск)$/i }).first();
+      const submitSelector = getDomainConfig(query.domain).locationSearchSubmit;
+      const search = submitSelector
+        ? page.locator(submitSelector).first()
+        : page.getByRole('button', { name: /^(search|buscar|cari|поиск)$/i }).first();
       if (await search.count()) await search.click();
       await page
         .waitForURL(url => Boolean(this.routeValue(query.domain, url)), { timeout: 3000 })
         .catch(() => {});
       const searchValue = this.routeValue(query.domain, new URL(page.url()));
-      if (searchValue)
+      if (searchValue) {
         locations.push({ id: searchValue, name: label.trim(), type: 'city', searchValue });
+        // One canonical match is useful even when resolving further opaque options
+        // would require another navigation and exceed the provider deadline.
+        if (this.filter(locations, query).length) return locations;
+      }
     }
     return locations;
   }
@@ -183,6 +190,8 @@ export class BrowserLocationProvider implements LocationProvider {
         response => {
           if (!this.isLocationResponse(response, query.domain)) return false;
           const url = new URL(response.url());
+          const suggestionPath = getDomainConfig(query.domain).locationSuggestionsPath;
+          if (suggestionPath && url.pathname !== suggestionPath) return false;
           if (/\/regions\/?$/.test(url.pathname)) return false;
           const term = ['query', 'q', 'search', 'searchTerm', 'term']
             .map(key => url.searchParams.get(key))

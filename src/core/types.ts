@@ -32,6 +32,9 @@ export interface DomainConfig {
   readonly language: string;
   readonly selectors: DomainSelectors;
   readonly urlPatterns: DomainUrlPatterns;
+  readonly searchJavaScriptEnabled?: boolean;
+  readonly locationSearchSubmit?: string;
+  readonly locationSuggestionsPath?: string;
 }
 
 export interface DomainSelectors {

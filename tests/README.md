@@ -77,7 +77,9 @@ contact details, credentials, or private browsing data in test fixtures.
 
 Build the image with `docker build -t olx-mcp:local .`, then run
 `npm run test:docker`. These checks launch real Chromium and connect to the
-container's stdio MCP server with network access disabled. They are separate
+container's stdio MCP server with network access disabled. An offline SSR fixture
+also verifies that frontend scripts cannot remove Portugal or Uzbekistan search
+cards before extraction. These checks are separate
 from the mocked suite and live OLX checks. See [Docker](../docs/docker.md).
 
 ## MCP live verification
