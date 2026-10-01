@@ -42,7 +42,7 @@ that the selector still matches the live site. Describe any live check separatel
 
 ## Releases
 
-The independent package name is `@harsh-2002/olx-mcp`, and the executable remains
+The package name is `@harsh-2002/olx-mcp`, and the executable remains
 `olx-mcp`. Releases require publish access to that npm scope and an `NPM_TOKEN`
 repository secret. Setting up those credentials is a maintainer responsibility.
 

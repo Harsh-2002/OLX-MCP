@@ -4,7 +4,7 @@
 
 Read `README.md`, `CONTRIBUTING.md`, `docs/architecture.md`, and `tests/README.md`.
 Check `git status` before editing and preserve unrelated user changes.
-This is an independent repository maintained at `Harsh-2002/OLX-MCP`.
+Repository: `Harsh-2002/OLX-MCP`.
 
 ## Architecture
 
