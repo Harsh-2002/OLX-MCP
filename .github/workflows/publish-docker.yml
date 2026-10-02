@@ -40,26 +40,35 @@ jobs:
         run: printf '%s' "$REGISTRY_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
       - name: Push the verified image
         run: |
-          docker tag olx-mcp:publish "$IMAGE:sha-$GITHUB_SHA"
           docker tag olx-mcp:publish "$IMAGE:latest"
-          docker push "$IMAGE:sha-$GITHUB_SHA"
           docker push "$IMAGE:latest"
       - name: Pull and verify the published digest
         run: |
-          docker pull "$IMAGE:sha-$GITHUB_SHA"
-          published_digest=$(docker image inspect "$IMAGE:sha-$GITHUB_SHA" --format '{{index .RepoDigests 0}}')
+          docker pull "$IMAGE:latest"
+          published_digest=$(docker image inspect "$IMAGE:latest" --format '{{index .RepoDigests 0}}')
           test -n "$published_digest"
           test "$(docker image inspect olx-mcp:publish --format '{{.Id}}')" = \
             "$(docker image inspect "$published_digest" --format '{{.Id}}')"
           npm run test:docker -- "$published_digest"
           {
             echo "Published image: $IMAGE:latest"
-            echo "Source tag: $IMAGE:sha-$GITHUB_SHA"
+            echo "Source revision: $GITHUB_SHA"
             echo "Digest: $published_digest"
             echo "Platform: linux/amd64"
             echo "Offline Chromium and MCP checks passed before and after publication."
             echo "For the first publication, set package visibility to Public and verify anonymous pulls."
           } >> "$GITHUB_STEP_SUMMARY"
+      - name: Remove legacy commit-tagged versions
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          package_path="/users/$GITHUB_REPOSITORY_OWNER/packages/container/olx-mcp"
+          legacy_versions=$(gh api "$package_path/versions" --paginate --jq \
+            '.[] | select(.metadata.container.tags | length > 0) | select(all(.metadata.container.tags[]; test("^sha-[0-9a-f]{40}$"))) | .id')
+          for version_id in $legacy_versions; do
+            gh api --method DELETE "$package_path/versions/$version_id"
+          done
+          gh api "$package_path/versions" --paginate --jq '.[] | .metadata.container.tags[]'
       - name: Log out of GHCR
         if: always()
         run: docker logout ghcr.io

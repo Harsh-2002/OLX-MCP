@@ -51,9 +51,9 @@ real Chromium and MCP behavior before pushing that exact image to GHCR. It uses
 the repository's `GITHUB_TOKEN` with `packages: write`; no npm or registry token
 secret is needed. No Git tag or GitHub release is created.
 
-Each successful publication updates `latest` and adds `sha-<full-commit>` for
-source identification. Pin an image digest when exact build reproducibility is
-required. Package visibility must be **Public** for anonymous pulls. See
+Each successful publication updates the only published tag, `latest`. The image
+label records its source commit. Package visibility must be **Public** for
+anonymous pulls. See
 [Docker publishing](docs/docker.md#publishing-to-ghcr) for the first-publication
 steps and verification commands.
 

@@ -49,9 +49,8 @@ requires a client that supports MCP 2026-07-28. There is no HTTP endpoint to
 configure. Normal searches require outbound internet access.
 
 Published images currently target `linux/amd64`. ARM machines require Docker's
-amd64 emulation and `--platform=linux/amd64`. Use a `sha-<full-commit>` tag or image
-digest to pin a tested build; `latest` follows the most recent published build.
-To update, pull the image again and restart the MCP connection.
+amd64 emulation and `--platform=linux/amd64`. The image uses only the `latest`
+tag. To update, pull the image again and restart the MCP connection.
 
 See [Docker](docs/docker.md) for local builds, verification, image size, and
 publishing instructions. Public images can be pulled without a GHCR login.

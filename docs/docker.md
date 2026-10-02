@@ -9,9 +9,9 @@ docker run --rm ghcr.io/harsh-2002/olx-mcp:latest --version
 
 The public image includes Chromium and its system libraries. Published images
 currently support `linux/amd64`; ARM hosts need amd64 emulation and
-`--platform=linux/amd64`. `latest` selects the most recent manually published
-build. A `sha-<full-commit>` tag identifies its source commit; pin the registry
-image digest to select an exact build.
+`--platform=linux/amd64`. The only published tag is `latest`, which selects the
+most recent manually published build. Pull it again and restart the MCP client
+to update.
 
 ## Build locally
 
@@ -133,9 +133,6 @@ The first published GHCR build on 2026-10-02 targets `linux/amd64` and reports
 1,032,703,476 bytes (approximately 1.03 GB) through `docker image inspect`.
 Its registry manifest contains 305,053,413 bytes of compressed layers
 (approximately 305 MB) for a fresh pull. Existing cached layers reduce downloads.
-The verified registry digest is
-`sha256:b66b40c94f05bbd93eccf5ae7eab0bd3dd48a8c7429dc21193726debcd0459a1`,
-built from commit `8fd3518fb8ff6c766f3681799c29468c2f510c35`.
 
 An earlier local full-Chromium build reported 1,060,945,919 bytes; that is the
 build measured in [the benchmark report](benchmarks.md). The previous shell
@@ -185,9 +182,9 @@ Run the **Publish Docker image** workflow from the repository's Actions tab,
 selecting `main`. Publishing is manual and does not create an npm package, Git
 tag, or GitHub release. The workflow runs `npm run ci`, builds the runtime image,
 and runs offline real-Chromium/MCP checks before logging into GHCR with the
-repository's `GITHUB_TOKEN`. It pushes the tested image under `latest` and
-`sha-<full-commit>`, then pulls the published digest and runs the Docker checks
-again. The run summary records the digest and source revision.
+repository's `GITHUB_TOKEN`. It pushes the tested image under `latest`, then
+pulls the published digest and runs the Docker checks again. The image label
+records the source commit, and the run summary records the registry digest.
 
 On the first publication, GitHub creates the package with private visibility.
 Open [the package settings](https://github.com/users/Harsh-2002/packages/container/olx-mcp/settings)
