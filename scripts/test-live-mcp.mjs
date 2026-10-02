@@ -9,6 +9,11 @@ const domains = requested.length ? requested : [...OLX_DOMAINS];
 for (const domain of domains) assert(OLX_DOMAINS.includes(domain), `Unsupported domain: ${domain}`);
 const checkImages = process.argv.includes('--images');
 const image = imageOption?.slice('--image='.length);
+const cdp = process.argv
+  .slice(2)
+  .find(arg => arg.startsWith('--cdp='))
+  ?.slice('--cdp='.length);
+assert(!(image && cdp), 'Use either --image or --cdp, not both');
 const client = new Client(
   { name: 'olx-live-verification', version: '1.0.0' },
   { versionNegotiation: { mode: { pin: '2026-07-28' } } }
@@ -28,7 +33,20 @@ const transport = new StdioClientTransport({
         '--tmpfs=/tmp:rw,nosuid,size=256m',
         image,
       ]
-    : ['dist/index.js'],
+    : cdp
+      ? [
+          '--input-type=module',
+          '-e',
+          `
+          import { chromium } from 'playwright';
+          import { fileURLToPath } from 'node:url';
+          // Experimental test entry only; the production CLI still launches Chromium.
+          chromium.launch = () => chromium.connectOverCDP(${JSON.stringify(cdp)}, { timeout: 15000 });
+          process.argv[1] = fileURLToPath(new URL('./dist/index.js', import.meta.url));
+          await import('./dist/index.js');
+        `,
+        ]
+      : ['dist/index.js'],
   stderr: 'inherit',
 });
 const queries = {

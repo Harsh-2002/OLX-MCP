@@ -1,0 +1,279 @@
+{
+  "checkedAt": "2026-10-02T14:39:58.192Z",
+  "image": "lightpanda/browser@sha256:39e89483ef14a50539b8d37a44073b8c89147c7cc37d6c1c569076a120315b2b",
+  "architecture": "amd64",
+  "browserVersion": "1.0.0-nightly.9990+28c84cc47",
+  "imageBytes": 360052035,
+  "playwrightVersion": "1.63.0",
+  "memoryLimitBytes": 1073741824,
+  "capabilities": [
+    {
+      "name": "dom-extraction",
+      "status": "passed"
+    },
+    {
+      "name": "button-click",
+      "status": "failed",
+      "error": "locator.click: Timeout 15000ms exceeded."
+    },
+    {
+      "name": "disable-javascript",
+      "status": "failed",
+      "error": "browserContext.newPage: Protocol error (Emulation.setScriptExecutionDisabled): Disabling script execution is not supported"
+    },
+    {
+      "name": "four-isolated-contexts",
+      "status": "failed",
+      "error": "browser.newContext: Protocol error (Target.createBrowserContext): Cannot have more than one browser context at a time"
+    }
+  ],
+  "countries": [
+    {
+      "domain": "olx.pt",
+      "locations": "not-requested",
+      "search": "failed",
+      "details": "not-run",
+      "pagination": "not-run",
+      "failure": "searchListings: browser.newPage: Protocol error (Target.createBrowserContext): Cannot have more than one browser context at a time",
+      "exitCode": 1
+    },
+    {
+      "domain": "olx.pl",
+      "locations": "not-requested",
+      "search": "failed",
+      "details": "not-run",
+      "pagination": "not-run",
+      "failure": "searchListings: browser.newPage: Protocol error (Target.createBrowserContext): Cannot have more than one browser context at a time",
+      "exitCode": 1
+    },
+    {
+      "domain": "olx.bg",
+      "locations": "not-requested",
+      "search": "failed",
+      "details": "not-run",
+      "pagination": "not-run",
+      "failure": "searchListings: browser.newPage: Protocol error (Target.createBrowserContext): Cannot have more than one browser context at a time",
+      "exitCode": 1
+    },
+    {
+      "domain": "olx.ro",
+      "locations": "not-requested",
+      "search": "failed",
+      "details": "not-run",
+      "pagination": "not-run",
+      "failure": "searchListings: browser.newPage: Protocol error (Target.createBrowserContext): Cannot have more than one browser context at a time",
+      "exitCode": 1
+    },
+    {
+      "domain": "olx.ua",
+      "locations": "not-requested",
+      "search": "failed",
+      "details": "not-run",
+      "pagination": "not-run",
+      "failure": "searchListings: browser.newPage: Protocol error (Target.createBrowserContext): Cannot have more than one browser context at a time",
+      "exitCode": 1
+    },
+    {
+      "domain": "olx.in",
+      "locations": "passed",
+      "search": "passed-with-location",
+      "details": "passed",
+      "pagination": "no-next-page",
+      "images": {
+        "status": "passed",
+        "mimeType": "image/webp",
+        "byteLength": 8336
+      },
+      "countrywidePagination": "Request timed out",
+      "failure": "Request timed out",
+      "mumbai": "passed-search-and-details",
+      "mumbaiPagination": "no-next-page",
+      "exitCode": 1
+    },
+    {
+      "domain": "olx.co.id",
+      "locations": "passed",
+      "search": "passed-with-location",
+      "details": "passed",
+      "pagination": "searchListings: locator.click: Timeout 30000ms exceeded.",
+      "images": {
+        "status": "passed",
+        "mimeType": "image/webp",
+        "byteLength": 43574
+      },
+      "failure": "searchListings: locator.click: Timeout 30000ms exceeded.",
+      "exitCode": 1
+    },
+    {
+      "domain": "olx.kz",
+      "locations": "searchLocations: Live location lookup failed on olx.kz: locator.click: Timeout 10000ms exceeded.",
+      "search": "failed",
+      "details": "not-run",
+      "pagination": "not-run",
+      "failure": "searchListings: browser.newPage: Protocol error (Target.createBrowserContext): Cannot have more than one browser context at a time",
+      "exitCode": 1
+    },
+    {
+      "domain": "olx.uz",
+      "locations": "passed",
+      "search": "failed",
+      "details": "not-run",
+      "pagination": "not-run",
+      "failure": "searchListings: browser.newPage: Protocol error (Target.createBrowserContext): Cannot have more than one browser context at a time",
+      "exitCode": 1
+    }
+  ],
+  "containerState": {
+    "Status": "running",
+    "Running": true,
+    "Paused": false,
+    "Restarting": false,
+    "OOMKilled": false,
+    "Dead": false,
+    "ExitCode": 0,
+    "Error": "",
+    "StartedAt": "2026-10-02T14:49:05.473316251Z",
+    "FinishedAt": "0001-01-01T00:00:00Z"
+  },
+  "status": "failed",
+  "isolation": "New Docker container and temporary filesystem per capability and country",
+  "chromiumControl": {
+    "image": "ghcr.io/harsh-2002/olx-mcp@sha256:498fcc944b62824881bfa3c755160eb11cb1a6ca39b553f26099ddfec78879f6",
+    "initialCountries": [
+      {
+        "domain": "olx.pt",
+        "locations": "not-requested",
+        "search": "passed-countrywide",
+        "details": "passed",
+        "pagination": "passed",
+        "images": {
+          "status": "passed",
+          "mimeType": "image/webp",
+          "byteLength": 14798
+        }
+      },
+      {
+        "domain": "olx.pl",
+        "locations": "not-requested",
+        "search": "passed-countrywide",
+        "details": "passed",
+        "pagination": "passed",
+        "images": {
+          "status": "passed",
+          "mimeType": "image/webp",
+          "byteLength": 9408
+        }
+      },
+      {
+        "domain": "olx.bg",
+        "locations": "not-requested",
+        "search": "passed-countrywide",
+        "details": "passed",
+        "pagination": "passed",
+        "images": {
+          "status": "passed",
+          "mimeType": "image/webp",
+          "byteLength": 40278
+        }
+      },
+      {
+        "domain": "olx.ro",
+        "locations": "not-requested",
+        "search": "passed-countrywide",
+        "details": "passed",
+        "pagination": "passed",
+        "images": {
+          "status": "passed",
+          "mimeType": "image/webp",
+          "byteLength": 80578
+        }
+      },
+      {
+        "domain": "olx.ua",
+        "locations": "not-requested",
+        "search": "passed-countrywide",
+        "details": "passed",
+        "pagination": "passed",
+        "images": {
+          "status": "passed",
+          "mimeType": "image/webp",
+          "byteLength": 64368
+        }
+      },
+      {
+        "domain": "olx.in",
+        "locations": "passed",
+        "search": "passed-with-location",
+        "details": "passed",
+        "pagination": "no-next-page",
+        "images": {
+          "status": "passed",
+          "mimeType": "image/webp",
+          "byteLength": 18748
+        },
+        "countrywidePagination": "passed",
+        "mumbai": "passed-search-and-details",
+        "mumbaiPagination": "no-next-page"
+      },
+      {
+        "domain": "olx.co.id",
+        "locations": "passed",
+        "search": "passed-with-location",
+        "details": "passed",
+        "pagination": "passed",
+        "images": {
+          "status": "passed",
+          "mimeType": "image/webp",
+          "byteLength": 17846
+        }
+      },
+      {
+        "domain": "olx.kz",
+        "locations": "passed",
+        "search": "passed-with-location",
+        "details": "getListingDetails: Could not find listing details on olx.kz using \"[data-testid=\"offer_title\"]\".",
+        "pagination": "passed",
+        "failure": "getListingDetails: Could not find listing details on olx.kz using \"[data-testid=\"offer_title\"]\"."
+      },
+      {
+        "domain": "olx.uz",
+        "locations": "passed",
+        "search": "passed-with-location",
+        "details": "passed",
+        "pagination": "searchListings: OLX returned HTTP 403; the page is unavailable or access is restricted",
+        "images": {
+          "status": "passed",
+          "mimeType": "image/webp",
+          "byteLength": 52702
+        },
+        "failure": "searchListings: OLX returned HTTP 403; the page is unavailable or access is restricted"
+      }
+    ],
+    "retries": [
+      {
+        "domain": "olx.kz",
+        "locations": "passed",
+        "search": "passed-with-location",
+        "details": "passed",
+        "pagination": "passed",
+        "images": {
+          "status": "passed",
+          "mimeType": "image/webp",
+          "byteLength": 64906
+        }
+      },
+      {
+        "domain": "olx.uz",
+        "locations": "passed",
+        "search": "passed-with-location",
+        "details": "passed",
+        "pagination": "passed",
+        "images": {
+          "status": "passed",
+          "mimeType": "image/webp",
+          "byteLength": 52702
+        }
+      }
+    ]
+  }
+}

@@ -124,3 +124,10 @@ verified images under `latest`.
 Request-summary tests cover success and failure, result counts and exclusion of
 private arguments and result contents from stderr logs. India regression tests
 cover delayed cards and a positive count whose cards never appear.
+
+The isolated Lightpanda compatibility experiment is described in
+[Lightpanda evaluation](../docs/lightpanda.md). Build first, then run
+`node scripts/test-lightpanda.mjs --output=/tmp/lightpanda-report.json`.
+It requires Docker and downloads a pinned browser image. Failed capability or
+country checks produce a nonzero exit code. It does not change the production
+browser or client configuration.
