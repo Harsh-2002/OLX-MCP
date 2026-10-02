@@ -1,8 +1,8 @@
 # OLX MCP
 
 Search OLX listings, view details, and show listing photos from your AI assistant.
-Supports Portugal, Poland, Bulgaria, Romania, Ukraine, India, Indonesia,
-Kazakhstan, and Uzbekistan.
+Supported countries: 🇵🇹 Portugal · 🇵🇱 Poland · 🇧🇬 Bulgaria · 🇷🇴 Romania ·
+🇺🇦 Ukraine · 🇮🇳 India · 🇮🇩 Indonesia · 🇰🇿 Kazakhstan · 🇺🇿 Uzbekistan.
 
 ## Quick start
 
@@ -22,7 +22,7 @@ docker run --log-opt max-size=10m --log-opt max-file=3 --rm -i --shm-size=256m g
 ```
 
 The server waits for an MCP client. For everyday use, let your client start it
-with one of the setups below. Use a current client with **MCP 2026-07-28** support.
+with one of the setups below.
 
 ## Connect your client
 
@@ -30,7 +30,7 @@ with one of the setups below. Use a current client with **MCP 2026-07-28** suppo
 <summary>Codex CLI</summary>
 
 ```bash
-codex mcp add olx -- docker run --log-opt max-size=10m --log-opt max-file=3 --rm -i --shm-size=256m ghcr.io/harsh-2002/olx-mcp:latest
+codex mcp add olx --env CODEX_MCP_PROTOCOL_VERSION=2026-07-28 -- docker run --log-opt max-size=10m --log-opt max-file=3 --rm -i --shm-size=256m ghcr.io/harsh-2002/olx-mcp:latest
 codex --enable mcp_2026_07_28
 ```
 
@@ -44,7 +44,7 @@ claude mcp add --scope user --transport stdio olx -- docker run --log-opt max-si
 MCP_SDK_GENERATION=v2 MCP_PROTOCOL_NEGOTIATION=auto claude
 ```
 
-Use a current Claude Code release. Check the connection with `/mcp`.
+Check the connection with `/mcp`.
 
 </details>
 
@@ -72,7 +72,7 @@ then start `opencode`:
           "--shm-size=256m",
           "ghcr.io/harsh-2002/olx-mcp:latest"
         ],
-        "protocol": "2026-07-28"
+        "protocol": "auto"
       }
     }
   }
@@ -102,8 +102,7 @@ openclaw mcp add olx --command docker --arg run --arg=--log-opt --arg=max-size=1
 openclaw mcp doctor olx --probe
 ```
 
-OpenClaw's selected runtime must support MCP 2026-07-28. Check the probe before
-using the connection; see [client compatibility](docs/integrations.md#openclaw).
+Check that the probe succeeds before starting a chat.
 
 </details>
 
@@ -116,10 +115,4 @@ Then ask your assistant:
 
 To update, pull `latest` again and restart the MCP connection.
 
-## More information
-
-[Usage](docs/tools.md) · [Countries](docs/countries.md) · [Docker](docs/docker.md) ·
-[Contributing](CONTRIBUTING.md) · [Architecture](docs/architecture.md) ·
-[Testing](tests/README.md) · [Benchmarks](docs/benchmarks.md)
-
-[MIT license](LICENSE).
+Licensed under [MIT](LICENSE).
