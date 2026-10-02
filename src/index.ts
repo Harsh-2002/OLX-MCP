@@ -3,7 +3,6 @@
 import { readFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
-import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { OLX_DOMAINS } from './core/domains.js';
 import { OLXMCPServer } from './core/server.js';
 
@@ -28,7 +27,7 @@ A Model Context Protocol server for searching OLX listings across supported OLX 
 
 Usage: olx-mcp
 
-Connect this stdio server from an MCP-compatible client.
+Requires an MCP 2026-07-28 client; earlier protocol versions are rejected.
 Example server configuration:
 
 {
@@ -51,9 +50,6 @@ async function main() {
     headless: true,
   });
 
-  // Initialize the server (browser, scrapers, tools)
-  await server.initialize();
-
   // Set up graceful shutdown
   const cleanup = async () => {
     await server.cleanup();
@@ -74,11 +70,9 @@ async function main() {
     process.exit(1);
   });
 
-  // Create and connect STDIO transport
-  const transport = new StdioServerTransport();
-
   try {
-    await server.connect(transport);
+    // Start Chromium only after a valid modern opening selects this server.
+    server.serve(undefined, () => server.initialize());
     console.error('OLX MCP Server started successfully'); // Log to stderr to avoid interfering with STDIO
   } catch (error) {
     console.error('Failed to start server:', error);

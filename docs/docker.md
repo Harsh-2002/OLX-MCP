@@ -24,7 +24,8 @@ settings, and tests are excluded from the build context.
 
 ## Run
 
-This image serves MCP over standard input/output. Run it with stdin attached:
+This image serves MCP 2026-07-28 over standard input/output. Older protocol
+clients are rejected. Run it with stdin attached:
 
 ```bash
 docker run --rm -i --shm-size=256m olx-mcp:local
@@ -69,7 +70,7 @@ npm run test:docker
 ```
 
 `test:docker` checks real Chromium startup, non-root execution, absence of source
-and development dependencies, the MCP handshake, tool discovery, native image-block delivery with an offline fixture, and invalid
+and development dependencies, modern MCP discovery, tool output schemas, native image-block delivery with an offline fixture, and invalid
 argument handling. Its containers use a read-only filesystem and have networking
 disabled. It does not query live OLX pages.
 
@@ -101,9 +102,9 @@ requires an external display and additional desktop configuration.
 
 Full Chromium replaces the smaller headless-shell build because live India and
 Indonesia requests failed with the shell and succeeded with full Chromium.
-On linux/amd64, the full-Chromium image reports approximately 1.07 GB
-(1,073,811,862 bytes) through `docker image inspect`, compared with about
-847 MB for the shell image. The increase is approximately 227 MB (27%).
+On linux/amd64, the full-Chromium image reports approximately 1.06 GB
+(1,060,945,919 bytes) through `docker image inspect`, compared with about
+847 MB for the shell image. The increase is approximately 214 MB (25%).
 Docker local size is not a registry download size.
 
 ## Performance and photo checks
@@ -129,3 +130,11 @@ SSR filtering reduced photo requests from two to zero and downloaded photo bytes
 from 1,048,712 to zero, while preserving both source URLs. Timing is printed for
 diagnostics, but this small local fixture does not establish an overall live-site
 speedup. Country-specific navigation, hydration and upstream latency still apply.
+
+## Modern clients
+
+The server supports only MCP 2026-07-28. For SDK v2 clients, explicitly pin modern
+negotiation with `versionNegotiation: { mode: { pin: '2026-07-28' } }`.
+For the installed Hermes integration, set `protocol: stateless` on its `olx` MCP
+configuration to start with `server/discover`. The server rejects any attempted
+legacy initialization. See [protocol migration](mcp-protocol.md).

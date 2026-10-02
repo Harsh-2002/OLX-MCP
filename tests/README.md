@@ -4,7 +4,7 @@
 
 | Command                    | Purpose                                                    |
 | -------------------------- | ---------------------------------------------------------- |
-| `npm test`                 | Run every mocked test file                                 |
+| `npm test`                 | Run the full unit and protocol suite                       |
 | `npm run test:watch`       | Run tests in watch mode                                    |
 | `npm run test:coverage`    | Run the full suite and enforce coverage thresholds         |
 | `npm run ci`               | Lint, formatting, type checking, coverage tests, and build |
@@ -103,3 +103,9 @@ Use `--images` with `test:live:mcp` to check actual photo bytes and source metad
 for every sampled country listing. Downloader unit tests cover URL/DNS validation,
 redirects, byte limits, file signatures, timeouts and cancellation. Page-admission
 tests cover queue bounds, FIFO release, cancellation and cleanup failures.
+
+Protocol checks use the real SDK v2 client pinned to MCP 2026-07-28. The stdio
+fixture verifies modern discovery, structured data and image blocks, execution
+errors, unknown-tool protocol errors, cancellation, and rejection of a legacy
+`initialize` request. Server unit tests also verify ISO date serialization and
+rejection of output that does not match the advertised schema.

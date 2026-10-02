@@ -1,4 +1,4 @@
-import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
+import type { CallToolResult } from '@modelcontextprotocol/server';
 import { z } from 'zod';
 import { BaseTool } from '../base/base-tool.js';
 import { GetListingDetailsArgsSchema } from '../../validation/schemas/listing.schema.js';
@@ -80,14 +80,16 @@ export class GetListingImagesTool extends BaseTool<Args, ListingImages> {
 
   toMcpResult(data: ListingImages): CallToolResult {
     const { images, ...metadata } = data;
+    const structuredContent = {
+      ...metadata,
+      images: images.map(({ data: _bytes, ...image }) => image),
+    };
     return {
+      structuredContent,
       content: [
         {
           type: 'text',
-          text: JSON.stringify({
-            ...metadata,
-            images: images.map(({ data: _bytes, ...image }) => image),
-          }),
+          text: JSON.stringify(structuredContent),
         },
         ...images.map(image => ({
           type: 'image' as const,

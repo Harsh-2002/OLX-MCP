@@ -1,8 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { Server } from '@modelcontextprotocol/sdk/server/index.js';
+import { Server } from '@modelcontextprotocol/server';
 import { chromium } from 'playwright';
-import { ListToolsRequestSchema, CallToolRequestSchema } from '@modelcontextprotocol/sdk/types.js';
-import { zodToJsonSchema } from 'zod-to-json-schema';
+import { serveStdio } from '@modelcontextprotocol/server/stdio';
 
 // Mock modules before importing
 const { mockServer, mockBrowser } = vi.hoisted(() => ({
@@ -10,17 +9,12 @@ const { mockServer, mockBrowser } = vi.hoisted(() => ({
   mockBrowser: { newPage: vi.fn(), close: vi.fn() },
 }));
 
-vi.mock('@modelcontextprotocol/sdk/server/index.js', () => ({
+vi.mock('@modelcontextprotocol/server', async importOriginal => ({
+  ...(await importOriginal<typeof import('@modelcontextprotocol/server')>()),
   Server: vi.fn(),
 }));
-
-vi.mock('@modelcontextprotocol/sdk/types.js', () => ({
-  ListToolsRequestSchema: Symbol('ListToolsRequestSchema'),
-  CallToolRequestSchema: Symbol('CallToolRequestSchema'),
-}));
-
-vi.mock('zod-to-json-schema', () => ({
-  zodToJsonSchema: vi.fn().mockReturnValue({ type: 'object' }),
+vi.mock('@modelcontextprotocol/server/stdio', () => ({
+  serveStdio: vi.fn(() => ({ close: vi.fn() })),
 }));
 
 vi.mock('playwright', () => ({ chromium: { launch: vi.fn() } }));
@@ -35,7 +29,6 @@ describe('OLXMCPServer', () => {
     vi.clearAllMocks();
     vi.mocked(Server).mockImplementation(() => mockServer as unknown as Server);
     vi.mocked(chromium.launch).mockResolvedValue(mockBrowser as any);
-    vi.mocked(zodToJsonSchema).mockReturnValue({ type: 'object' });
     mockServer.connect.mockResolvedValue(undefined);
     mockBrowser.close.mockResolvedValue(undefined);
 
@@ -99,10 +92,37 @@ describe('OLXMCPServer', () => {
     it('should connect to transport', async () => {
       const mockTransport = { send: vi.fn(), onMessage: vi.fn() };
 
-      await server.connect(mockTransport);
+      server.serve(mockTransport as any);
 
       const serverInstance = server.getServer();
-      expect(serverInstance.connect).toHaveBeenCalledWith(mockTransport);
+      expect(serverInstance).toBeDefined();
+      expect(serveStdio).toHaveBeenCalledWith(
+        expect.any(Function),
+        expect.objectContaining({ legacy: 'reject', transport: mockTransport })
+      );
+    });
+  });
+
+  describe('Modern serving lifecycle', () => {
+    it('prepares resources only when the modern entry invokes its factory', async () => {
+      const prepare = vi.fn(() => server.initialize());
+      server.serve(undefined, prepare);
+      expect(prepare).not.toHaveBeenCalled();
+      expect(chromium.launch).not.toHaveBeenCalled();
+      const factory = vi.mocked(serveStdio).mock.calls[0]![0];
+      expect(await factory({ era: 'modern' } as any)).toBe(server.getServer());
+      expect(prepare).toHaveBeenCalledOnce();
+      await server.cleanup();
+      expect(mockBrowser.close).toHaveBeenCalledOnce();
+    });
+    it('cleans up resources if factory preparation fails', async () => {
+      await server.initialize();
+      server.serve(undefined, async () => {
+        throw new Error('Preparation failed');
+      });
+      const factory = vi.mocked(serveStdio).mock.calls[0]![0];
+      await expect(factory({ era: 'modern' } as any)).rejects.toThrow('Preparation failed');
+      expect(mockBrowser.close).toHaveBeenCalledOnce();
     });
   });
 
@@ -137,8 +157,10 @@ describe('OLXMCPServer', () => {
     });
 
     it('should propagate transport connection failures', async () => {
-      mockServer.connect.mockRejectedValueOnce(new Error('Connection failed'));
-      await expect(server.connect({})).rejects.toThrow('Connection failed');
+      vi.mocked(serveStdio).mockImplementationOnce(() => {
+        throw new Error('Connection failed');
+      });
+      expect(() => server.serve()).toThrow('Connection failed');
     });
   });
 
@@ -231,12 +253,13 @@ describe('OLXMCPServer', () => {
         ([registered]) => registered === schema
       );
       expect(call).toBeDefined();
-      return call![1];
+      return (request?: unknown, context = { mcpReq: { signal: new AbortController().signal } }) =>
+        call![1](request, context);
     };
 
     it('lists all four tools after initialization with their JSON schemas', async () => {
       await server.initialize();
-      const result = await getHandler(ListToolsRequestSchema)();
+      const result = await getHandler('tools/list')();
       expect(result.tools.map((tool: any) => tool.name)).toEqual([
         'searchListings',
         'getListingDetails',
@@ -247,16 +270,16 @@ describe('OLXMCPServer', () => {
     });
 
     it('rejects an unknown tool', async () => {
-      await expect(
-        getHandler(CallToolRequestSchema)({ params: { name: 'missing' } })
-      ).rejects.toThrow('Tool not found: missing');
+      await expect(getHandler('tools/call')({ params: { name: 'missing' } })).rejects.toThrow(
+        'Tool not found: missing'
+      );
     });
 
     it('surfaces tool argument validation errors', async () => {
       await server.initialize();
-      await expect(
-        getHandler(CallToolRequestSchema)({ params: { name: 'searchListings' } })
-      ).rejects.toThrow('Validation error');
+      const result = await getHandler('tools/call')({ params: { name: 'searchListings' } });
+      expect(result.isError).toBe(true);
+      expect(result.content[0].text).toContain('Validation error');
     });
 
     it('serializes successful tool data into MCP text content', async () => {
@@ -273,9 +296,10 @@ describe('OLXMCPServer', () => {
         success: true,
         data,
       });
-      const result = await getHandler(CallToolRequestSchema)({
+      const result = await getHandler('tools/call')({
         params: { name: 'searchListings', arguments: { domain: 'olx.in', query: 'test' } },
       });
+      expect(result.structuredContent).toEqual(data);
       expect(result.content).toEqual([{ type: 'text', text: JSON.stringify(data) }]);
     });
 
@@ -299,13 +323,53 @@ describe('OLXMCPServer', () => {
           ],
         },
       });
-      const result = await getHandler(CallToolRequestSchema)({
+      const result = await getHandler('tools/call')({
         params: { name: 'getListingImages', arguments: { domain: 'olx.in', listingId: '123' } },
       });
       expect(result.content[1]).toEqual({ type: 'image', data: '/9j/', mimeType: 'image/jpeg' });
       expect(JSON.parse(result.content[0].text).images[0]).not.toHaveProperty('data');
     });
 
+    it('validates wire output and serializes dates as ISO strings', async () => {
+      await server.initialize();
+      const registry = (server as any).registry;
+      const execute = vi.spyOn(registry.get('getListingDetails'), 'execute');
+      execute.mockResolvedValueOnce({
+        success: true,
+        data: {
+          id: '123',
+          title: 'Fixture',
+          url: 'https://www.olx.in/item/123',
+          publishedAt: new Date('2026-01-01T00:00:00Z'),
+        },
+      });
+      const response = await getHandler('tools/call')({
+        params: { name: 'getListingDetails', arguments: {} },
+      });
+      expect(response.structuredContent.publishedAt).toBe('2026-01-01T00:00:00.000Z');
+      expect(JSON.parse(response.content[0].text)).toEqual(response.structuredContent);
+      execute.mockResolvedValueOnce({ success: true, data: { title: 'Missing required fields' } });
+      const log = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const invalid = await getHandler('tools/call')({
+        params: { name: 'getListingDetails', arguments: {} },
+      });
+      expect(invalid.isError).toBe(true);
+      expect(invalid.content[0].text).toBe('Tool produced an invalid result');
+      log.mockRestore();
+    });
+    it('forwards the SDK v2 request cancellation signal', async () => {
+      await server.initialize();
+      const registry = (server as any).registry;
+      const execute = vi
+        .spyOn(registry.get('searchListings'), 'execute')
+        .mockResolvedValue({ success: false, error: new Error('cancelled') });
+      const signal = new AbortController().signal;
+      await getHandler('tools/call')(
+        { params: { name: 'searchListings', arguments: { query: 'x' } } },
+        { mcpReq: { signal } }
+      );
+      expect(execute).toHaveBeenCalledWith({ query: 'x' }, signal);
+    });
     it('surfaces scraper failures returned by a tool', async () => {
       await server.initialize();
       const registry = (server as any).registry;
@@ -313,9 +377,13 @@ describe('OLXMCPServer', () => {
         success: false,
         error: new Error('Scraping failed'),
       });
-      await expect(
-        getHandler(CallToolRequestSchema)({ params: { name: 'searchListings', arguments: {} } })
-      ).rejects.toThrow('Scraping failed');
+      const result = await getHandler('tools/call')({
+        params: { name: 'searchListings', arguments: {} },
+      });
+      expect(result).toEqual({
+        isError: true,
+        content: [{ type: 'text', text: 'Scraping failed' }],
+      });
     });
   });
 });

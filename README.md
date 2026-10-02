@@ -5,6 +5,11 @@ An MCP server for searching OLX listings and getting listing details.
 Country adapters cover Portugal, Poland, Bulgaria, Romania, Ukraine, India,
 Indonesia, Kazakhstan, and Uzbekistan. Live verification results are tracked per country. See [Country capabilities](docs/countries.md).
 
+This server requires **MCP 2026-07-28**. Earlier protocol versions are rejected.
+Clients must support modern `server/discover` and per-request metadata. The
+TypeScript implementation uses SDK v2; updating a client dependency alone may
+also require enabling modern protocol negotiation. See [protocol requirements](docs/mcp-protocol.md).
+
 ## Setup
 
 Requires Node.js 22 or newer and npm.

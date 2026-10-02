@@ -4,15 +4,15 @@ import { vi } from 'vitest';
  * Mock implementations for MCP (Model Context Protocol) testing
  */
 
-// Mock Server class from @modelcontextprotocol/sdk
+// Mock Server class from @modelcontextprotocol/server
 export const mockMCPServer = {
   setRequestHandler: vi.fn(),
   connect: vi.fn().mockResolvedValue(undefined),
 };
 
-// Mock request schemas
-export const mockListToolsRequestSchema = Symbol('ListToolsRequestSchema');
-export const mockCallToolRequestSchema = Symbol('CallToolRequestSchema');
+// SDK v2 request methods
+export const mockListToolsMethod = 'tools/list';
+export const mockCallToolMethod = 'tools/call';
 
 // Mock MCP types and utilities
 export const createMockMCPRequest = (name: string, args: Record<string, unknown> = {}) => ({
@@ -62,22 +62,8 @@ export const createMockToolRegistration = (name: string, description: string) =>
 
 // Mock the entire MCP SDK
 export const mockMCPSDK = () => {
-  vi.mock('@modelcontextprotocol/sdk/server/index.js', () => ({
+  vi.mock('@modelcontextprotocol/server', () => ({
     Server: vi.fn().mockImplementation(() => mockMCPServer),
-  }));
-
-  vi.mock('@modelcontextprotocol/sdk/types.js', () => ({
-    ListToolsRequestSchema: mockListToolsRequestSchema,
-    CallToolRequestSchema: mockCallToolRequestSchema,
-  }));
-
-  vi.mock('zod-to-json-schema', () => ({
-    zodToJsonSchema: vi.fn().mockImplementation(schema => ({
-      type: 'object',
-      properties: {},
-      required: [],
-      ...schema,
-    })),
   }));
 };
 
@@ -114,10 +100,10 @@ export const verifyMCPCalls = () => ({
   handlersSet: mockMCPServer.setRequestHandler.mock.calls.length > 0,
   connectionsMade: mockMCPServer.connect.mock.calls.length > 0,
   listToolsHandlerCalls: mockMCPServer.setRequestHandler.mock.calls.filter(
-    call => call[0] === mockListToolsRequestSchema
+    call => call[0] === mockListToolsMethod
   ),
   callToolHandlerCalls: mockMCPServer.setRequestHandler.mock.calls.filter(
-    call => call[0] === mockCallToolRequestSchema
+    call => call[0] === mockCallToolMethod
   ),
 });
 

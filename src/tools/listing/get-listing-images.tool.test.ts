@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { CallToolResultSchema } from '@modelcontextprotocol/sdk/types.js';
+import { CallToolResultSchema } from '@modelcontextprotocol/core';
 import { GetListingImagesTool } from './get-listing-images.tool.js';
 import type { OlxScraperFactory } from '../../scrapers/olx/scraper.factory.js';
 import type { ImageDownloader } from '../../images/image-downloader.js';

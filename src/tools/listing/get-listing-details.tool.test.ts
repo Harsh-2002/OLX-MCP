@@ -252,7 +252,7 @@ describe('GetListingDetailsTool', () => {
 
       assertIsError(result);
       expect(result.error.message).toContain('Validation error');
-      expect(result.error.message).toContain('Expected string');
+      expect(result.error.message).toContain('expected string');
     });
 
     it('should validate boolean flags correctly', async () => {

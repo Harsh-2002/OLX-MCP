@@ -71,13 +71,14 @@
   },
   "homepage": "https://github.com/Harsh-2002/OLX-MCP#readme",
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.31.0",
+    "@modelcontextprotocol/server": "^2.2.0",
     "playwright": "^1.63.0",
-    "zod": "^3.25.76",
-    "zod-to-json-schema": "^3.24.6"
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "@eslint/js": "^9.34.0",
+    "@modelcontextprotocol/client": "^2.2.0",
+    "@modelcontextprotocol/core": "^2.2.0",
     "@types/node": "^24.3.0",
     "@typescript-eslint/eslint-plugin": "^8.41.0",
     "@typescript-eslint/parser": "^8.41.0",

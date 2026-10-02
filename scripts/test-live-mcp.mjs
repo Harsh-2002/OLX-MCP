@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
-import { Client } from '@modelcontextprotocol/sdk/client/index.js';
-import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
+import { Client } from '@modelcontextprotocol/client';
+import { StdioClientTransport } from '@modelcontextprotocol/client/stdio';
 import { OLX_DOMAINS, LOCATION_DOMAINS } from '../dist/core/domains.js';
 
 const imageOption = process.argv.slice(2).find(arg => arg.startsWith('--image='));
@@ -9,7 +9,10 @@ const domains = requested.length ? requested : [...OLX_DOMAINS];
 for (const domain of domains) assert(OLX_DOMAINS.includes(domain), `Unsupported domain: ${domain}`);
 const checkImages = process.argv.includes('--images');
 const image = imageOption?.slice('--image='.length);
-const client = new Client({ name: 'olx-live-verification', version: '1.0.0' });
+const client = new Client(
+  { name: 'olx-live-verification', version: '1.0.0' },
+  { versionNegotiation: { mode: { pin: '2026-07-28' } } }
+);
 const transport = new StdioClientTransport({
   command: image ? 'docker' : process.execPath,
   args: image
@@ -39,8 +42,12 @@ async function call(name, args) {
       status: 'started',
     })
   );
-  const result = await client.callTool({ name, arguments: args }, undefined, { timeout: 120000 });
-  assert(!result.isError, `${name} returned a tool error`);
+  const result = await client.callTool({ name, arguments: args }, { timeout: 120000 });
+  assert(
+    !result.isError,
+    `${name}: ${result.content?.find(block => block.type === 'text')?.text ?? 'tool error'}`
+  );
+  assert(result.structuredContent, 'Missing structured tool output');
   const text = result.content.find(block => block.type === 'text');
   assert(text, 'MCP response has no text content');
   console.log(
@@ -51,7 +58,8 @@ async function call(name, args) {
       status: 'completed',
     })
   );
-  return JSON.parse(text.text);
+  assert.deepEqual(JSON.parse(text.text), result.structuredContent);
+  return result.structuredContent;
 }
 try {
   await client.connect(transport);
@@ -62,7 +70,7 @@ try {
     'searchListings',
     'searchLocations',
   ]);
-  console.log('MCP handshake and tool discovery passed');
+  console.log('MCP 2026-07-28 discovery and tool schemas passed');
   for (const domain of domains) {
     const [locationQuery, query] = queries[domain] ?? ['', 'laptop'];
     const report = {
@@ -109,10 +117,12 @@ try {
                 name: 'getListingImages',
                 arguments: { domain, listingId: result.listings[0].id, limit: 1 },
               },
-              undefined,
               { timeout: 120000 }
             );
-            assert(!photos.isError, 'Photo tool returned an error');
+            assert(
+              !photos.isError,
+              `Photo tool failed: ${photos.content?.find(block => block.type === 'text')?.text ?? 'unknown error'}`
+            );
             const imageBlocks = photos.content.filter(block => block.type === 'image');
             assert.equal(imageBlocks.length, 1, 'Expected one native MCP image block');
             assert(
@@ -123,6 +133,7 @@ try {
             const bytes = Buffer.from(imageBlocks[0].data, 'base64');
             assert(bytes.length > 0 && bytes.length <= 2 * 1024 * 1024);
             const metadata = JSON.parse(photos.content.find(block => block.type === 'text').text);
+            assert.deepEqual(metadata, photos.structuredContent);
             assert.equal(metadata.images[0].byteLength, bytes.length);
             assert.equal(metadata.listingId, result.listings[0].id);
             assert(metadata.images[0].url.startsWith('https://'));

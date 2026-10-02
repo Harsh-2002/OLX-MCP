@@ -136,6 +136,13 @@ the download cap. Responsive sources are preferred when the browser exposes them
 returned resolution still depends on OLX. These sampled checks do not guarantee
 photos for every listing or support for every client/model's image formats.
 
+The subsequent MCP 2026-07-28 / SDK v2 migration was verified on 2026-10-02 with a
+modern-only Docker client. All nine sampled country checks passed, including
+search, details and native photo delivery. Live location lookup passed for India,
+Indonesia, Kazakhstan and Uzbekistan; pagination was verified where available.
+Hermes also received and analyzed a photo through the migrated connection.
+See [protocol requirements](mcp-protocol.md).
+
 ## Primary references
 
 - [Indonesia search and load-more behavior](https://www.olx.co.id/items/q-laptop)

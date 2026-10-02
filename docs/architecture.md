@@ -7,14 +7,15 @@ authentication system, background worker, or persistent listing store.
 It launches full Chromium through Playwright's `chromium` channel in new headless
 mode and reads public OLX search and detail pages.
 
-The runtime dependencies are the MCP TypeScript SDK, Playwright, Zod, and
-`zod-to-json-schema`. TypeScript builds ESM output in `dist/`.
+The runtime dependencies are `@modelcontextprotocol/server` v2, Playwright and
+Zod v4. Zod generates JSON Schema directly; the client SDK is a development
+dependency for verification. TypeScript builds ESM output in `dist/`.
 
 ## Request flow
 
 ```text
 MCP client
-  -> stdio transport (src/index.ts)
+  -> modern-only stdio entry (src/index.ts)
   -> MCP request handlers (src/core/server.ts)
   -> tool registry
   -> tool argument validation (BaseTool + Zod schema)
@@ -23,13 +24,17 @@ MCP client
   -> isolated Playwright page
   -> OLX DOM extraction
   -> Result<T>
-  -> JSON text in the MCP response
+  -> validated structuredContent, JSON text and optional image blocks
 ```
 
-`OLXMCPServer.initialize()` launches a shared browser, creates the scraper factory,
+`OLXMCPServer.initialize()` lazily launches a shared browser after a valid modern
+opening, creates the scraper factory,
 and registers four tools before connecting the transport. Tool discovery converts
-Zod schemas to JSON Schema. Tool failures become thrown errors at the MCP handler;
-successes use JSON text, with native image blocks added by the photo tool.
+Zod schemas to JSON Schema. Unknown tools produce Invalid Params protocol errors. Tool argument, scraping
+and download failures return `isError: true` with actionable text. Successful
+results are validated against advertised output schemas before delivery as
+`structuredContent` and JSON text, plus native photo blocks when requested.
+Internal dates become ISO strings at the JSON boundary.
 
 `src/index.ts` installs shutdown handlers and delegates cleanup to the server.
 The executable wrapper in `bin/` starts the compiled entry point and forwards signals.
@@ -173,3 +178,15 @@ compact metadata without duplicating base64 inside text. Existing tools retain
 JSON text responses, now without pretty-print whitespace. All four tools advertise
 read-only annotations. Vision interpretation and attachment delivery belong to
 the connected client; source URLs accompany the image bytes for sharing.
+
+## Protocol revision
+
+`serveStdio` is configured with `legacy: 'reject'` and the server advertises only
+`2026-07-28`. There is no legacy handshake fallback in the server. SDK v2 handles
+`server/discover`, request metadata, server identity and required wire result
+fields. The four-tool catalog has deterministic order and a five-minute public
+cache hint; discovery has the same hint. Scraped tool results are not advertised
+as cacheable. Cancellation uses `ctx.mcpReq.signal`.
+
+[SDK migration guide](https://github.com/modelcontextprotocol/typescript-sdk/blob/main/docs/migration/support-2026-07-28.md)
+and [MCP 2026-07-28 specification](https://modelcontextprotocol.io/specification/2026-07-28).

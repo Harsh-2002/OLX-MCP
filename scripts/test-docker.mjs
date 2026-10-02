@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
-import { Client } from '@modelcontextprotocol/sdk/client/index.js';
-import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
+import { Client } from '@modelcontextprotocol/client';
+import { StdioClientTransport } from '@modelcontextprotocol/client/stdio';
 
 const image = process.argv[2] || 'olx-mcp:local';
 const { version } = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
@@ -62,29 +62,32 @@ const browserCheck = spawnSync(
         // Exercise native image delivery over the actual SDK transport without external downloads.
         const { OLXMCPServer } = await import('./dist/core/server.js');
         const { GetListingImagesTool } = await import('./dist/tools/listing/get-listing-images.tool.js');
-        const { Client: PhotoClient } = await import('@modelcontextprotocol/sdk/client/index.js');
-        const { InMemoryTransport } = await import('@modelcontextprotocol/sdk/inMemory.js');
+        const { createMcpHandler } = await import('@modelcontextprotocol/server');
         const photo = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a2ioAAAAASUVORK5CYII=', 'base64');
         const fixturePhoto = { url: 'https://apollo.olx.in/fixture.png', mimeType: 'image/png', data: photo.toString('base64'), byteLength: photo.length };
         const photoTool = new GetListingImagesTool({ getScraper: () => ({ getListingDetails: async () => ({ success: true, data: { id: 'fixture', title: 'Photo fixture', url: 'https://www.olx.in/item/fixture', images: [fixturePhoto.url] } }) }) }, { download: async () => fixturePhoto });
         const photoServer = new OLXMCPServer({ name: 'photo-fixture', version: '1' });
         photoServer.registry.register(photoTool);
-        const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
-        const photoClient = new PhotoClient({ name: 'photo-check', version: '1' });
+        const handler = createMcpHandler(() => photoServer.getServer(), { legacy: 'reject' });
         try {
-          await photoServer.connect(serverTransport);
-          await photoClient.connect(clientTransport);
-          const result = await photoClient.callTool({ name: 'getListingImages', arguments: { domain: 'olx.in', listingId: 'fixture' } });
+          const response = await handler.fetch(new Request('http://fixture/mcp', {
+            method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json, text/event-stream', 'MCP-Protocol-Version': '2026-07-28', 'Mcp-Method': 'tools/call', 'Mcp-Name': 'getListingImages' },
+            body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'tools/call', params: { name: 'getListingImages', arguments: { domain: 'olx.in', listingId: 'fixture' }, _meta: { 'io.modelcontextprotocol/protocolVersion': '2026-07-28', 'io.modelcontextprotocol/clientCapabilities': {} } } }),
+          }));
+          assert.equal(response.status, 200);
+          const { result, error } = await response.json();
+          assert.equal(error, undefined);
+          assert.equal(result.resultType, 'complete');
           assert.equal(result.content[1].type, 'image');
           assert.equal(result.content[1].mimeType, 'image/png');
           assert.deepEqual(Buffer.from(result.content[1].data, 'base64'), photo);
-          const metadata = JSON.parse(result.content[0].text);
+          const metadata = result.structuredContent;
+          assert.deepEqual(JSON.parse(result.content[0].text), metadata);
           assert.equal(metadata.images[0].url, fixturePhoto.url);
           assert.equal(metadata.images[0].byteLength, photo.length);
-          assert.equal(metadata.images[0].data, undefined, 'Base64 must not be duplicated in text');
+          assert.equal(metadata.images[0].data, undefined, 'Base64 must not be duplicated in metadata');
         } finally {
-          await photoClient.close();
-          await photoServer.getServer().close();
+          await handler.close();
         }
         await page.setContent(fixture);
         assert.equal(await page.locator('[data-cy="l-card"]').count(), 0, 'Fixture must reproduce card loss when JavaScript is enabled');
@@ -105,7 +108,33 @@ const browserCheck = spawnSync(
 if (browserCheck.error) throw browserCheck.error;
 assert.equal(browserCheck.status, 0, 'Container browser check failed');
 
-const client = new Client({ name: 'olx-mcp-docker-check', version: '1.0.0' });
+// The actual CLI must reject a legacy opening and exit when stdin closes,
+// without launching a browser for a client it will never serve.
+const legacy = spawnSync('docker', [...runtimeArgs, '-i', image], {
+  input:
+    JSON.stringify({
+      jsonrpc: '2.0',
+      id: 1,
+      method: 'initialize',
+      params: {
+        protocolVersion: '2025-11-25',
+        capabilities: {},
+        clientInfo: { name: 'legacy-check', version: '1' },
+      },
+    }) + '\n',
+  encoding: 'utf8',
+  timeout: 15000,
+});
+if (legacy.error) throw legacy.error;
+assert.equal(legacy.status, 0, 'Legacy-rejected process must exit on stdin EOF');
+const rejection = JSON.parse(legacy.stdout.trim());
+assert.equal(rejection.error.code, -32022);
+assert.deepEqual(rejection.error.data.supported, ['2026-07-28']);
+
+const client = new Client(
+  { name: 'olx-mcp-docker-check', version: '1.0.0' },
+  { versionNegotiation: { mode: { pin: '2026-07-28' } } }
+);
 const transport = new StdioClientTransport({
   command: 'docker',
   args: [...runtimeArgs, '-i', image],
@@ -127,9 +156,11 @@ try {
     'searchListings',
     'searchLocations',
   ]);
-  await assert.rejects(
-    client.callTool({ name: 'searchListings', arguments: { domain: 'invalid', query: 'test' } }),
-    /Validation error/
+  assert.equal(client.getProtocolEra(), 'modern');
+  assert.deepEqual(client.getDiscoverResult().supportedVersions, ['2026-07-28']);
+  assert(
+    tools.every(tool => tool.outputSchema),
+    'All tools must advertise output schemas'
   );
   for (const name of [
     'searchListings',
@@ -137,16 +168,16 @@ try {
     'getListingDetails',
     'getListingImages',
   ]) {
-    await assert.rejects(
-      client.callTool({
-        name,
-        arguments: { domain: 'olx.com.br', query: 'test', listingId: '123' },
-      }),
-      /Validation error/
-    );
+    const result = await client.callTool({
+      name,
+      arguments: { domain: 'olx.com.br', query: 'test', listingId: '123' },
+    });
+    assert.equal(result.isError, true);
+    assert.match(result.content[0].text, /Validation error/);
   }
+  await assert.rejects(client.callTool({ name: 'missing', arguments: {} }), /Tool not found/);
   console.log(
-    'Docker checks passed: non-root runtime, Chromium, MCP handshake, tools, and validation'
+    'Docker checks passed: non-root runtime, Chromium, MCP 2026-07-28 discovery, native images, output schemas, and tool errors'
   );
 } finally {
   clearTimeout(deadline);

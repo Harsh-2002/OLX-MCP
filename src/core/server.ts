@@ -1,6 +1,13 @@
-import { Server } from '@modelcontextprotocol/sdk/server/index.js';
-import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
-import { zodToJsonSchema } from 'zod-to-json-schema';
+import {
+  Server,
+  ProtocolError,
+  ProtocolErrorCode,
+  type Transport,
+  type Tool,
+} from '@modelcontextprotocol/server';
+import { serveStdio, type StdioServerHandle } from '@modelcontextprotocol/server/stdio';
+import { z } from 'zod';
+import { MCP_PROTOCOL_VERSION, toolOutputSchemas } from './tool-output.js';
 import { chromium, Browser } from 'playwright';
 
 import { ToolRegistry } from './tool-registry.js';
@@ -22,6 +29,7 @@ export interface ServerConfig {
 export class OLXMCPServer {
   private readonly registry = new ToolRegistry();
   private readonly server: Server;
+  private serving?: StdioServerHandle;
   private browser?: Browser | undefined;
   private scraperFactory?: OlxScraperFactory | undefined;
   private locationService?: LocationService;
@@ -33,6 +41,11 @@ export class OLXMCPServer {
         version: config.version,
       },
       {
+        supportedProtocolVersions: [MCP_PROTOCOL_VERSION],
+        cacheHints: {
+          'tools/list': { ttlMs: 300000, cacheScope: 'public' },
+          'server/discover': { ttlMs: 300000, cacheScope: 'public' },
+        },
         capabilities: {
           tools: {},
         },
@@ -74,11 +87,12 @@ export class OLXMCPServer {
   }
 
   private setupHandlers(): void {
-    this.server.setRequestHandler(ListToolsRequestSchema, async () => ({
+    this.server.setRequestHandler('tools/list', async () => ({
       tools: this.registry.getAllTools().map(tool => ({
         name: tool.name,
         description: tool.description,
-        inputSchema: zodToJsonSchema(tool.inputSchema),
+        inputSchema: z.toJSONSchema(tool.inputSchema, { io: 'input' }) as Tool['inputSchema'],
+        outputSchema: z.toJSONSchema(toolOutputSchemas[tool.name]!, { io: 'output' }),
         annotations: {
           readOnlyHint: true,
           destructiveHint: false,
@@ -88,28 +102,35 @@ export class OLXMCPServer {
       })),
     }));
 
-    this.server.setRequestHandler(CallToolRequestSchema, async (request, extra) => {
+    this.server.setRequestHandler('tools/call', async (request, extra) => {
       const { name, arguments: args } = request.params;
 
       const tool = this.registry.get(name);
       if (!tool) {
-        throw new Error(`Tool not found: ${name}`);
+        throw new ProtocolError(ProtocolErrorCode.InvalidParams, `Tool not found: ${name}`);
       }
 
-      const result = await tool.execute(args || {}, extra?.signal);
+      const result = await tool.execute(args || {}, extra.mcpReq.signal);
 
       if (!result.success) {
-        throw new Error(result.error.message);
+        return { isError: true, content: [{ type: 'text', text: result.error.message }] };
       }
 
-      if (tool.toMcpResult) return tool.toMcpResult(result.data);
-
+      const response = tool.toMcpResult?.(result.data);
+      // Serialize once to normalize Dates and omit undefined fields before validation.
+      const wireData = response?.structuredContent ?? JSON.parse(JSON.stringify(result.data));
+      const validated = toolOutputSchemas[name]!.safeParse(wireData);
+      if (!validated.success) {
+        console.error(`Invalid output from ${name}:`, validated.error.message);
+        return {
+          isError: true,
+          content: [{ type: 'text', text: 'Tool produced an invalid result' }],
+        };
+      }
       return {
-        content: [
-          {
-            type: 'text' as const,
-            text: JSON.stringify(result.data),
-          },
+        structuredContent: validated.data,
+        content: response?.content ?? [
+          { type: 'text' as const, text: JSON.stringify(validated.data) },
         ],
       };
     });
@@ -120,6 +141,10 @@ export class OLXMCPServer {
   }
 
   async cleanup(): Promise<void> {
+    const serving = this.serving;
+    this.serving = undefined;
+    this.server.onclose = undefined;
+    await serving?.close();
     this.registry.clear();
     this.locationService?.clear();
     this.locationService = undefined;
@@ -133,7 +158,25 @@ export class OLXMCPServer {
     }
   }
 
-  async connect(transport: any): Promise<void> {
-    await this.server.connect(transport);
+  serve(transport?: Transport, prepare?: () => Promise<void>): void {
+    this.server.onclose = () => {
+      void this.cleanup().catch(error => console.error('Cleanup failed:', error));
+    };
+    this.serving = serveStdio(
+      async () => {
+        try {
+          await prepare?.();
+          return this.server;
+        } catch (error) {
+          await this.cleanup();
+          throw error;
+        }
+      },
+      {
+        legacy: 'reject',
+        ...(transport ? { transport } : {}),
+        onerror: error => console.error('MCP transport error:', error),
+      }
+    );
   }
 }

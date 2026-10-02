@@ -19,7 +19,7 @@ export abstract class BaseTool<TArgs, TResult> implements MCPTool<TArgs, TResult
       return createResult(result);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        const formattedErrors = error.errors
+        const formattedErrors = error.issues
           .map(err => `${err.path.join('.')}: ${err.message}`)
           .join(', ');
         return createError<TResult>(`Validation error: ${formattedErrors}`);
@@ -35,7 +35,7 @@ export abstract class BaseTool<TArgs, TResult> implements MCPTool<TArgs, TResult
       return createResult(validated);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        const formattedErrors = error.errors
+        const formattedErrors = error.issues
           .map(err => `${err.path.join('.')}: ${err.message}`)
           .join(', ');
         return createError<T>(`Validation error: ${formattedErrors}`);

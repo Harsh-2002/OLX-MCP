@@ -88,7 +88,7 @@ describe('BaseTool', () => {
       expect(isError(result)).toBe(true);
       if (isError(result)) {
         expect(result.error.message).toContain('Validation error');
-        expect(result.error.message).toContain('Expected string, received number');
+        expect(result.error.message).toContain('expected string, received number');
       }
     });
 
