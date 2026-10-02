@@ -112,7 +112,7 @@ errors, unknown-tool protocol errors, cancellation, and rejection of a legacy
 `initialize` request. Server unit tests also verify ISO date serialization and
 rejection of output that does not match the advertised schema.
 
-Automatic CI on pushes to `main` (including merges) and pull requests runs lint,
+Automatic CI on branch pushes (including merges to `main`) and pull requests runs lint,
 formatting, TypeScript checks, all unit and protocol tests with coverage, and the
 TypeScript build on Node.js 22 and 24. It does not build Docker images.
 

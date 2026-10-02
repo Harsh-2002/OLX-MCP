@@ -31,6 +31,7 @@ closures are unavailable in the page execution context.
 - Do not claim implemented support for fields or tools that only exist as types or schemas.
 - Never store secrets or personal browsing data in the repository.
 - Preserve the required MIT notices. Current project metadata uses this repository's identity.
+- Work on a branch and open a pull request. Never push directly to `main`.
 - Do not publish packages, push tags, or rewrite shared history without explicit user authorization.
 
 ## Validation

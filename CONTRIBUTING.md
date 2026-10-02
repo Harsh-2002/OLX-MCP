@@ -17,7 +17,7 @@ Read [Architecture](docs/architecture.md) before changing module boundaries, and
 
 ## Making changes
 
-1. Create a focused branch from `main`.
+1. Create a focused branch from `main`. Never push directly to `main`; submit changes through a pull request.
 2. Keep changes scoped to the issue being addressed.
 3. Add regression coverage for behavior changes, including failure paths.
 4. Update documentation when tool inputs, outputs, setup, or behavior change.
@@ -59,7 +59,7 @@ anonymous pulls. See
 [Docker publishing](docs/docker.md#publishing-to-ghcr) for the first-publication
 steps and verification commands.
 
-CI on `main` and pull requests runs the full validation suite on Node.js 22 and 24
+CI on branch pushes and pull requests runs the full validation suite on Node.js 22 and 24
 on Ubuntu 24.04. Pushes (including merges) and pull requests do not build or
 publish Docker images. Docker builds and native AMD64/ARM64 runtime checks run
 only when a maintainer manually starts **Publish Docker image**.
