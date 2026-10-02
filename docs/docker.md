@@ -138,3 +138,8 @@ negotiation with `versionNegotiation: { mode: { pin: '2026-07-28' } }`.
 For the installed Hermes integration, set `protocol: stateless` on its `olx` MCP
 configuration to start with `server/discover`. The server rejects any attempted
 legacy initialization. See [protocol migration](mcp-protocol.md).
+
+The resource measurement defaults to ten pairs after a warmup, with alternating
+order and equal page lifecycle timing. Pass a third argument to change the pair
+count. See [benchmarks](benchmarks.md) for previous/current image comparisons, raw
+samples and the limits of the timing claims.

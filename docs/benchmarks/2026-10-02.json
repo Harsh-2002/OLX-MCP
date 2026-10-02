@@ -1,0 +1,2198 @@
+{
+  "sourceRevisions": {
+    "previous": "72d12cc61f5d0b8cdc2f8d6e63a8d78feb78dd9e",
+    "current": "89b573d2a744bf6631813fcf7d7da31f09749748"
+  },
+  "versions": {
+    "previous": {
+      "node": "v24.21.0",
+      "playwright": "1.63.0",
+      "mcp": "1.31.0",
+      "zod": "3.25.76"
+    },
+    "current": {
+      "node": "v24.21.0",
+      "playwright": "1.63.0",
+      "mcp": "2.2.0",
+      "zod": "4.6.5"
+    }
+  },
+  "mcpComparison": {
+    "date": "2026-10-02T09:24:56.762Z",
+    "methodology": {
+      "rounds": 5,
+      "callsPerOperationPerRound": 10,
+      "warmupPairsExcluded": 1,
+      "operationWarmupsExcluded": 1,
+      "alternatingOrder": true,
+      "outboundNetwork": false,
+      "fixture": "10 synthetic listings and one 4164-byte PNG; actual compiled server, Chromium and stdio; direct requests bypass catalog cache",
+      "startupScope": "Docker launch, Node/SDK, Chromium and protocol connection; fixture harness rather than unmodified CLI",
+      "liveOlxLatencyMeasured": false,
+      "excludedWork": ["tool input validation", "scraping", "photo downloading", "vision analysis"]
+    },
+    "summary": {
+      "previous": {
+        "image": "olx-mcp:performance",
+        "imageId": "sha256:00dc397d22773a383c65691a5c490ede3e3cc4f7739281fae4224075eb4338da",
+        "imageBytes": 1073811862,
+        "startupMs": {
+          "count": 5,
+          "median": 4635.262,
+          "p95": 5223.051,
+          "min": 4124.095,
+          "max": 5223.051
+        },
+        "operations": {
+          "catalog": {
+            "latencyMs": {
+              "count": 50,
+              "median": 6.462,
+              "p95": 12.127,
+              "min": 4.75,
+              "max": 15.007
+            },
+            "responseBytes": {
+              "count": 50,
+              "median": 3423,
+              "p95": 3424,
+              "min": 3423,
+              "max": 3424
+            }
+          },
+          "search": {
+            "latencyMs": {
+              "count": 50,
+              "median": 4.309,
+              "p95": 5.989,
+              "min": 3.53,
+              "max": 6.622
+            },
+            "responseBytes": {
+              "count": 50,
+              "median": 2258,
+              "p95": 2258,
+              "min": 2258,
+              "max": 2258
+            }
+          },
+          "photo": {
+            "latencyMs": {
+              "count": 50,
+              "median": 4.466,
+              "p95": 5.905,
+              "min": 3.627,
+              "max": 8.247
+            },
+            "responseBytes": {
+              "count": 50,
+              "median": 5914,
+              "p95": 5914,
+              "min": 5914,
+              "max": 5914
+            }
+          },
+          "cachedCatalog": {
+            "latencyMs": {
+              "count": 50,
+              "median": 5.642,
+              "p95": 10.01,
+              "min": 4.855,
+              "max": 12.778
+            },
+            "responseBytes": {
+              "count": 50,
+              "median": 3424,
+              "p95": 3424,
+              "min": 3424,
+              "max": 3424
+            },
+            "totalWireResponses": 50
+          }
+        }
+      },
+      "current": {
+        "image": "olx-mcp:local",
+        "imageId": "sha256:d9c736439459b4245512ed2d5a4e659145599ecc30b87f9b6c6c3327f65d9b01",
+        "imageBytes": 1060945919,
+        "startupMs": {
+          "count": 5,
+          "median": 4822.775,
+          "p95": 5442.764,
+          "min": 4530.789,
+          "max": 5442.764
+        },
+        "operations": {
+          "catalog": {
+            "latencyMs": {
+              "count": 50,
+              "median": 12.708,
+              "p95": 20.148,
+              "min": 9.89,
+              "max": 26.246
+            },
+            "responseBytes": {
+              "count": 50,
+              "median": 7713,
+              "p95": 7714,
+              "min": 7713,
+              "max": 7714
+            }
+          },
+          "search": {
+            "latencyMs": {
+              "count": 50,
+              "median": 5.61,
+              "p95": 8.102,
+              "min": 4.586,
+              "max": 10.321
+            },
+            "responseBytes": {
+              "count": 50,
+              "median": 4322,
+              "p95": 4322,
+              "min": 4322,
+              "max": 4322
+            }
+          },
+          "photo": {
+            "latencyMs": {
+              "count": 50,
+              "median": 5.653,
+              "p95": 10.258,
+              "min": 4.274,
+              "max": 11.939
+            },
+            "responseBytes": {
+              "count": 50,
+              "median": 6256,
+              "p95": 6256,
+              "min": 6256,
+              "max": 6256
+            }
+          },
+          "cachedCatalog": {
+            "latencyMs": {
+              "count": 50,
+              "median": 0.239,
+              "p95": 0.478,
+              "min": 0.21,
+              "max": 0.611
+            },
+            "responseBytes": {
+              "count": 50,
+              "median": 0,
+              "p95": 0,
+              "min": 0,
+              "max": 0
+            },
+            "totalWireResponses": 0
+          }
+        }
+      }
+    },
+    "runs": {
+      "previous": [
+        {
+          "startupMs": 4967.120203000002,
+          "samples": {
+            "catalog": [
+              {
+                "elapsedMs": 13.027105000001029,
+                "responseBytes": 3423
+              },
+              {
+                "elapsedMs": 6.802515999996103,
+                "responseBytes": 3423
+              },
+              {
+                "elapsedMs": 6.243929999996908,
+                "responseBytes": 3423
+              },
+              {
+                "elapsedMs": 5.596513999997114,
+                "responseBytes": 3423
+              },
+              {
+                "elapsedMs": 9.049709999999322,
+                "responseBytes": 3423
+              },
+              {
+                "elapsedMs": 5.971663999996963,
+                "responseBytes": 3423
+              },
+              {
+                "elapsedMs": 12.12699799999973,
+                "responseBytes": 3423
+              },
+              {
+                "elapsedMs": 10.559151000001293,
+                "responseBytes": 3423
+              },
+              {
+                "elapsedMs": 8.378979999994044,
+                "responseBytes": 3424
+              },
+              {
+                "elapsedMs": 6.579800999999861,
+                "responseBytes": 3424
+              }
+            ],
+            "search": [
+              {
+                "elapsedMs": 5.989120999998704,
+                "responseBytes": 2258
+              },
+              {
+                "elapsedMs": 5.239682999999786,
+                "responseBytes": 2258
+              },
+              {
+                "elapsedMs": 5.926723000004131,
+                "responseBytes": 2258
+              },
+              {
+                "elapsedMs": 4.808927999998559,
+                "responseBytes": 2258
+              },
+              {
+                "elapsedMs": 4.105827999999747,
+                "responseBytes": 2258
+              },
+              {
+                "elapsedMs": 4.624792999995407,
+                "responseBytes": 2258
+              },
+              {
+                "elapsedMs": 4.119726999997511,
+                "responseBytes": 2258
+              },
+              {
+                "elapsedMs": 4.585628000000725,
+                "responseBytes": 2258
+              },
+              {
+                "elapsedMs": 3.8772620000017923,
+                "responseBytes": 2258
+              },
+              {
+                "elapsedMs": 4.432436000002781,
+                "responseBytes": 2258
+              }
+            ],
+            "photo": [
+              {
+                "elapsedMs": 4.1407449999969685,
+                "responseBytes": 5914
+              },
+              {
+                "elapsedMs": 5.00543800000014,
+                "responseBytes": 5914
+              },
+              {
+                "elapsedMs": 4.475488000003679,
+                "responseBytes": 5914
+              },
+              {
+                "elapsedMs": 4.596763000001374,
+                "responseBytes": 5914
+              },
+              {
+                "elapsedMs": 4.539626000005228,
+                "responseBytes": 5914
+              },
+              {
+                "elapsedMs": 4.220287999996799,
+                "responseBytes": 5914
+              },
+              {
+                "elapsedMs": 8.24724900000001,
+                "responseBytes": 5914
+              },
+              {
+                "elapsedMs": 4.437067999999272,
+                "responseBytes": 5914
+              },
+              {
+                "elapsedMs": 4.349084000001312,
+                "responseBytes": 5914
+              },
+              {
+                "elapsedMs": 4.002962999998999,
+                "responseBytes": 5914
+              }
+            ],
+            "cachedCatalog": [
+              {
+                "elapsedMs": 5.3361819999990985,
+                "responseBytes": 3424,
+                "wireResponses": 1
+              },
+              {
+                "elapsedMs": 5.341613999997207,
+                "responseBytes": 3424,
+                "wireResponses": 1
+              },
+              {
+                "elapsedMs": 6.578405000000203,
+                "responseBytes": 3424,
+                "wireResponses": 1
+              },
+              {
+                "elapsedMs": 5.106973999994807,
+                "responseBytes": 3424,
+                "wireResponses": 1
+              },
+              {
+                "elapsedMs": 5.858967999993183,
+                "responseBytes": 3424,
+                "wireResponses": 1
+              },
+              {
+                "elapsedMs": 5.3647689999997965,
+                "responseBytes": 3424,
+                "wireResponses": 1
+              },
+              {
+                "elapsedMs": 5.085978000002797,
+                "responseBytes": 3424,
+                "wireResponses": 1
+              },
+              {
+                "elapsedMs": 5.517151000000013,
+                "responseBytes": 3424,
+                "wireResponses": 1
+              },
+              {
+                "elapsedMs": 7.3771080000005895,
+                "responseBytes": 3424,
+                "wireResponses": 1
+              },
+              {
+                "elapsedMs": 5.661404999998922,
+                "responseBytes": 3424,
+                "wireResponses": 1
+              }
+            ]
+          }
+        },
+        {
+          "startupMs": 5223.050858999995,
+          "samples": {
+            "catalog": [
+              {
+                "elapsedMs": 7.19882100000541,
+                "responseBytes": 3423
+              },
+              {
+                "elapsedMs": 6.174426000005042,
+                "responseBytes": 3423
+              },
+              {
+                "elapsedMs": 5.828201000003901,
+                "responseBytes": 3423
+              },
+              {
+                "elapsedMs": 5.906594000000041,
+                "responseBytes": 3423
+              },
+              {
+                "elapsedMs": 5.796030999998038,
+                "responseBytes": 3423
+              },
+              {
+                "elapsedMs": 4.924648000000161,
+                "responseBytes": 3423
+              },
+              {
+                "elapsedMs": 5.7672009999951115,
+                "responseBytes": 3423
+              },
+              {
+                "elapsedMs": 7.801599999998871,
+                "responseBytes": 3423
+              },
+              {
+                "elapsedMs": 9.536062999999558,
+                "responseBytes": 3424
+              },
+              {
+                "elapsedMs": 6.3719380000038655,
+                "responseBytes": 3424
+              }
+            ],
+            "search": [
+              {
+                "elapsedMs": 5.049371000000974,
+                "responseBytes": 2258
+              },
+              {
+                "elapsedMs": 4.286909000002197,
+                "responseBytes": 2258
+              },
+              {
+                "elapsedMs": 4.305656999997154,
+                "responseBytes": 2258
+              },
+              {
+                "elapsedMs": 4.312589000001026,
+                "responseBytes": 2258
+              },
+              {
+                "elapsedMs": 4.034780000001774,
+                "responseBytes": 2258
+              },
+              {
+                "elapsedMs": 3.640118999996048,
+                "responseBytes": 2258
+              },
+              {
+                "elapsedMs": 4.319765000000189,
+                "responseBytes": 2258
+              },
+              {
+                "elapsedMs": 3.9167430000015884,
+                "responseBytes": 2258
+              },
+              {
+                "elapsedMs": 5.2647369999976945,
+                "responseBytes": 2258
+              },
+              {
+                "elapsedMs": 4.293854999996256,
+                "responseBytes": 2258
+              }
+            ],
+            "photo": [
+              {
+                "elapsedMs": 5.5640500000008615,
+                "responseBytes": 5914
+              },
+              {
+                "elapsedMs": 5.328076999998302,
+                "responseBytes": 5914
+              },
+              {
+                "elapsedMs": 4.706258999998681,
+                "responseBytes": 5914
+              },
+              {
+                "elapsedMs": 4.886101999996754,
+                "responseBytes": 5914
+              },
+              {
+                "elapsedMs": 5.2563220000010915,
+                "responseBytes": 5914
+              },
+              {
+                "elapsedMs": 4.562667999998666,
+                "responseBytes": 5914
+              },
+              {
+                "elapsedMs": 4.658785999999964,
+                "responseBytes": 5914
+              },
+              {
+                "elapsedMs": 5.904756999996607,
+                "responseBytes": 5914
+              },
+              {
+                "elapsedMs": 6.893271000000823,
+                "responseBytes": 5914
+              },
+              {
+                "elapsedMs": 4.38424600000144,
+                "responseBytes": 5914
+              }
+            ],
+            "cachedCatalog": [
+              {
+                "elapsedMs": 6.043460000000778,
+                "responseBytes": 3424,
+                "wireResponses": 1
+              },
+              {
+                "elapsedMs": 6.604996000001847,
+                "responseBytes": 3424,
+                "wireResponses": 1
+              },
+              {
+                "elapsedMs": 7.341495000000577,
+                "responseBytes": 3424,
+                "wireResponses": 1
+              },
+              {
+                "elapsedMs": 5.934439999997267,
+                "responseBytes": 3424,
+                "wireResponses": 1
+              },
+              {
+                "elapsedMs": 11.105803999998898,
+                "responseBytes": 3424,
+                "wireResponses": 1
+              },
+              {
+                "elapsedMs": 6.896704000006139,
+                "responseBytes": 3424,
+                "wireResponses": 1
+              },
+              {
+                "elapsedMs": 5.241149000001315,
+                "responseBytes": 3424,
+                "wireResponses": 1
+              },
+              {
+                "elapsedMs": 12.777727000000596,
+                "responseBytes": 3424,
+                "wireResponses": 1
+              },
+              {
+                "elapsedMs": 10.01045200000226,
+                "responseBytes": 3424,
+                "wireResponses": 1
+              },
+              {
+                "elapsedMs": 6.086271000000124,
+                "responseBytes": 3424,
+                "wireResponses": 1
+              }
+            ]
+          }
+        },
+        {
+          "startupMs": 4124.094984000003,
+          "samples": {
+            "catalog": [
+              {
+                "elapsedMs": 7.119292000003043,
+                "responseBytes": 3423
+              },
+              {
+                "elapsedMs": 7.190946000002441,
+                "responseBytes": 3423
+              },
+              {
+                "elapsedMs": 5.596321999997599,
+                "responseBytes": 3423
+              },
+              {
+                "elapsedMs": 6.059573000005912,
+                "responseBytes": 3423
+              },
+              {
+                "elapsedMs": 6.699779000002309,
+                "responseBytes": 3423
+              },
+              {
+                "elapsedMs": 6.357769000009284,
+                "responseBytes": 3423
+              },
+              {
+                "elapsedMs": 7.227520000000368,
+                "responseBytes": 3423
+              },
+              {
+                "elapsedMs": 6.014884999996866,
+                "responseBytes": 3423
+              },
+              {
+                "elapsedMs": 6.646534999992582,
+                "responseBytes": 3424
+              },
+              {
+                "elapsedMs": 4.750301000007312,
+                "responseBytes": 3424
+              }
+            ],
+            "search": [
+              {
+                "elapsedMs": 4.322994000001927,
+                "responseBytes": 2258
+              },
+              {
+                "elapsedMs": 3.939035999996122,
+                "responseBytes": 2258
+              },
+              {
+                "elapsedMs": 3.6989009999961127,
+                "responseBytes": 2258
+              },
+              {
+                "elapsedMs": 4.075691999998526,
+                "responseBytes": 2258
+              },
+              {
+                "elapsedMs": 3.839910000009695,
+                "responseBytes": 2258
+              },
+              {
+                "elapsedMs": 3.5296629999938887,
+                "responseBytes": 2258
+              },
+              {
+                "elapsedMs": 3.679602000003797,
+                "responseBytes": 2258
+              },
+              {
+                "elapsedMs": 4.073669000004884,
+                "responseBytes": 2258
+              },
+              {
+                "elapsedMs": 5.393287999992026,
+                "responseBytes": 2258
+              },
+              {
+                "elapsedMs": 3.981052000002819,
+                "responseBytes": 2258
+              }
+            ],
+            "photo": [
+              {
+                "elapsedMs": 4.6942980000021635,
+                "responseBytes": 5914
+              },
+              {
+                "elapsedMs": 4.5635859999893,
+                "responseBytes": 5914
+              },
+              {
+                "elapsedMs": 4.2903929999883985,
+                "responseBytes": 5914
+              },
+              {
+                "elapsedMs": 3.8963820000062697,
+                "responseBytes": 5914
+              },
+              {
+                "elapsedMs": 3.6268459999992047,
+                "responseBytes": 5914
+              },
+              {
+                "elapsedMs": 4.431070000006002,
+                "responseBytes": 5914
+              },
+              {
+                "elapsedMs": 4.301113000008627,
+                "responseBytes": 5914
+              },
+              {
+                "elapsedMs": 4.169392000010703,
+                "responseBytes": 5914
+              },
+              {
+                "elapsedMs": 4.208912999994936,
+                "responseBytes": 5914
+              },
+              {
+                "elapsedMs": 4.209189000001061,
+                "responseBytes": 5914
+              }
+            ],
+            "cachedCatalog": [
+              {
+                "elapsedMs": 5.72019699998782,
+                "responseBytes": 3424,
+                "wireResponses": 1
+              },
+              {
+                "elapsedMs": 7.699842999994871,
+                "responseBytes": 3424,
+                "wireResponses": 1
+              },
+              {
+                "elapsedMs": 6.491134999989299,
+                "responseBytes": 3424,
+                "wireResponses": 1
+              },
+              {
+                "elapsedMs": 5.1592890000029,
+                "responseBytes": 3424,
+                "wireResponses": 1
+              },
+              {
+                "elapsedMs": 5.4724350000033155,
+                "responseBytes": 3424,
+                "wireResponses": 1
+              },
+              {
+                "elapsedMs": 5.22908199999074,
+                "responseBytes": 3424,
+                "wireResponses": 1
+              },
+              {
+                "elapsedMs": 4.937814000004437,
+                "responseBytes": 3424,
+                "wireResponses": 1
+              },
+              {
+                "elapsedMs": 5.134151000005659,
+                "responseBytes": 3424,
+                "wireResponses": 1
+              },
+              {
+                "elapsedMs": 6.160019999995711,
+                "responseBytes": 3424,
+                "wireResponses": 1
+              },
+              {
+                "elapsedMs": 4.993566999997711,
+                "responseBytes": 3424,
+                "wireResponses": 1
+              }
+            ]
+          }
+        },
+        {
+          "startupMs": 4331.744843000008,
+          "samples": {
+            "catalog": [
+              {
+                "elapsedMs": 7.371656999996048,
+                "responseBytes": 3423
+              },
+              {
+                "elapsedMs": 6.487185999998474,
+                "responseBytes": 3423
+              },
+              {
+                "elapsedMs": 5.3864230000035604,
+                "responseBytes": 3423
+              },
+              {
+                "elapsedMs": 5.6693019999947865,
+                "responseBytes": 3423
+              },
+              {
+                "elapsedMs": 5.537622999996529,
+                "responseBytes": 3423
+              },
+              {
+                "elapsedMs": 5.568760000009206,
+                "responseBytes": 3423
+              },
+              {
+                "elapsedMs": 5.519377999997232,
+                "responseBytes": 3423
+              },
+              {
+                "elapsedMs": 5.213855000009062,
+                "responseBytes": 3423
+              },
+              {
+                "elapsedMs": 5.351418000005651,
+                "responseBytes": 3424
+              },
+              {
+                "elapsedMs": 6.230262000011862,
+                "responseBytes": 3424
+              }
+            ],
+            "search": [
+              {
+                "elapsedMs": 6.622004000004381,
+                "responseBytes": 2258
+              },
+              {
+                "elapsedMs": 4.0967169999930775,
+                "responseBytes": 2258
+              },
+              {
+                "elapsedMs": 4.767864000008558,
+                "responseBytes": 2258
+              },
+              {
+                "elapsedMs": 5.845553999999538,
+                "responseBytes": 2258
+              },
+              {
+                "elapsedMs": 4.105281999989529,
+                "responseBytes": 2258
+              },
+              {
+                "elapsedMs": 5.26473999999871,
+                "responseBytes": 2258
+              },
+              {
+                "elapsedMs": 4.25996500000474,
+                "responseBytes": 2258
+              },
+              {
+                "elapsedMs": 4.593995000002906,
+                "responseBytes": 2258
+              },
+              {
+                "elapsedMs": 4.366137999997591,
+                "responseBytes": 2258
+              },
+              {
+                "elapsedMs": 3.9390320000093197,
+                "responseBytes": 2258
+              }
+            ],
+            "photo": [
+              {
+                "elapsedMs": 4.53367900000012,
+                "responseBytes": 5914
+              },
+              {
+                "elapsedMs": 4.607059000001755,
+                "responseBytes": 5914
+              },
+              {
+                "elapsedMs": 4.681667000011657,
+                "responseBytes": 5914
+              },
+              {
+                "elapsedMs": 4.455730000001495,
+                "responseBytes": 5914
+              },
+              {
+                "elapsedMs": 3.901872000002186,
+                "responseBytes": 5914
+              },
+              {
+                "elapsedMs": 4.076262000002316,
+                "responseBytes": 5914
+              },
+              {
+                "elapsedMs": 5.49218600000313,
+                "responseBytes": 5914
+              },
+              {
+                "elapsedMs": 4.199273000005633,
+                "responseBytes": 5914
+              },
+              {
+                "elapsedMs": 4.0720149999979185,
+                "responseBytes": 5914
+              },
+              {
+                "elapsedMs": 4.571321000010357,
+                "responseBytes": 5914
+              }
+            ],
+            "cachedCatalog": [
+              {
+                "elapsedMs": 4.91032599999744,
+                "responseBytes": 3424,
+                "wireResponses": 1
+              },
+              {
+                "elapsedMs": 5.6769099999946775,
+                "responseBytes": 3424,
+                "wireResponses": 1
+              },
+              {
+                "elapsedMs": 5.407414000001154,
+                "responseBytes": 3424,
+                "wireResponses": 1
+              },
+              {
+                "elapsedMs": 5.236745999995037,
+                "responseBytes": 3424,
+                "wireResponses": 1
+              },
+              {
+                "elapsedMs": 5.5078190000058385,
+                "responseBytes": 3424,
+                "wireResponses": 1
+              },
+              {
+                "elapsedMs": 5.39998000000196,
+                "responseBytes": 3424,
+                "wireResponses": 1
+              },
+              {
+                "elapsedMs": 5.156644000002416,
+                "responseBytes": 3424,
+                "wireResponses": 1
+              },
+              {
+                "elapsedMs": 5.432593000004999,
+                "responseBytes": 3424,
+                "wireResponses": 1
+              },
+              {
+                "elapsedMs": 4.93581899999117,
+                "responseBytes": 3424,
+                "wireResponses": 1
+              },
+              {
+                "elapsedMs": 4.8552679999993416,
+                "responseBytes": 3424,
+                "wireResponses": 1
+              }
+            ]
+          }
+        },
+        {
+          "startupMs": 4635.2618340000045,
+          "samples": {
+            "catalog": [
+              {
+                "elapsedMs": 9.909152000007452,
+                "responseBytes": 3423
+              },
+              {
+                "elapsedMs": 6.760985000000801,
+                "responseBytes": 3423
+              },
+              {
+                "elapsedMs": 15.006640999999945,
+                "responseBytes": 3423
+              },
+              {
+                "elapsedMs": 9.17984900000738,
+                "responseBytes": 3423
+              },
+              {
+                "elapsedMs": 6.628593000001274,
+                "responseBytes": 3423
+              },
+              {
+                "elapsedMs": 7.7220369999995455,
+                "responseBytes": 3423
+              },
+              {
+                "elapsedMs": 6.436180000004242,
+                "responseBytes": 3423
+              },
+              {
+                "elapsedMs": 6.516384999995353,
+                "responseBytes": 3423
+              },
+              {
+                "elapsedMs": 7.7794750000030035,
+                "responseBytes": 3424
+              },
+              {
+                "elapsedMs": 6.343150000000605,
+                "responseBytes": 3424
+              }
+            ],
+            "search": [
+              {
+                "elapsedMs": 3.9301069999928586,
+                "responseBytes": 2258
+              },
+              {
+                "elapsedMs": 4.115869999994175,
+                "responseBytes": 2258
+              },
+              {
+                "elapsedMs": 3.744546999994782,
+                "responseBytes": 2258
+              },
+              {
+                "elapsedMs": 4.844170999989728,
+                "responseBytes": 2258
+              },
+              {
+                "elapsedMs": 4.07550999999512,
+                "responseBytes": 2258
+              },
+              {
+                "elapsedMs": 4.8866350000025705,
+                "responseBytes": 2258
+              },
+              {
+                "elapsedMs": 6.48576999999932,
+                "responseBytes": 2258
+              },
+              {
+                "elapsedMs": 5.17385400000785,
+                "responseBytes": 2258
+              },
+              {
+                "elapsedMs": 4.334455999996862,
+                "responseBytes": 2258
+              },
+              {
+                "elapsedMs": 5.527582000009716,
+                "responseBytes": 2258
+              }
+            ],
+            "photo": [
+              {
+                "elapsedMs": 4.739744000005885,
+                "responseBytes": 5914
+              },
+              {
+                "elapsedMs": 4.5706499999942025,
+                "responseBytes": 5914
+              },
+              {
+                "elapsedMs": 3.8279880000045523,
+                "responseBytes": 5914
+              },
+              {
+                "elapsedMs": 4.57356499999878,
+                "responseBytes": 5914
+              },
+              {
+                "elapsedMs": 4.504790000006324,
+                "responseBytes": 5914
+              },
+              {
+                "elapsedMs": 4.334226999999373,
+                "responseBytes": 5914
+              },
+              {
+                "elapsedMs": 4.32608599998639,
+                "responseBytes": 5914
+              },
+              {
+                "elapsedMs": 4.092854999995325,
+                "responseBytes": 5914
+              },
+              {
+                "elapsedMs": 3.9907830000011018,
+                "responseBytes": 5914
+              },
+              {
+                "elapsedMs": 3.664031000007526,
+                "responseBytes": 5914
+              }
+            ],
+            "cachedCatalog": [
+              {
+                "elapsedMs": 6.518454000004567,
+                "responseBytes": 3424,
+                "wireResponses": 1
+              },
+              {
+                "elapsedMs": 6.477587000001222,
+                "responseBytes": 3424,
+                "wireResponses": 1
+              },
+              {
+                "elapsedMs": 7.87820200000715,
+                "responseBytes": 3424,
+                "wireResponses": 1
+              },
+              {
+                "elapsedMs": 5.621641999998246,
+                "responseBytes": 3424,
+                "wireResponses": 1
+              },
+              {
+                "elapsedMs": 7.279490999993868,
+                "responseBytes": 3424,
+                "wireResponses": 1
+              },
+              {
+                "elapsedMs": 5.400268999990658,
+                "responseBytes": 3424,
+                "wireResponses": 1
+              },
+              {
+                "elapsedMs": 7.597988000008627,
+                "responseBytes": 3424,
+                "wireResponses": 1
+              },
+              {
+                "elapsedMs": 5.359981999994488,
+                "responseBytes": 3424,
+                "wireResponses": 1
+              },
+              {
+                "elapsedMs": 6.020099999994272,
+                "responseBytes": 3424,
+                "wireResponses": 1
+              },
+              {
+                "elapsedMs": 8.17774699999427,
+                "responseBytes": 3424,
+                "wireResponses": 1
+              }
+            ]
+          }
+        }
+      ],
+      "current": [
+        {
+          "startupMs": 5062.946827,
+          "samples": {
+            "catalog": [
+              {
+                "elapsedMs": 15.999675999999454,
+                "responseBytes": 7713
+              },
+              {
+                "elapsedMs": 12.671682000000146,
+                "responseBytes": 7713
+              },
+              {
+                "elapsedMs": 12.745252000000619,
+                "responseBytes": 7713
+              },
+              {
+                "elapsedMs": 10.69513999999981,
+                "responseBytes": 7713
+              },
+              {
+                "elapsedMs": 11.421088999999483,
+                "responseBytes": 7713
+              },
+              {
+                "elapsedMs": 10.800465000000258,
+                "responseBytes": 7713
+              },
+              {
+                "elapsedMs": 10.79045799999949,
+                "responseBytes": 7713
+              },
+              {
+                "elapsedMs": 12.251399999997375,
+                "responseBytes": 7713
+              },
+              {
+                "elapsedMs": 14.34890599999926,
+                "responseBytes": 7713
+              },
+              {
+                "elapsedMs": 11.160122000001138,
+                "responseBytes": 7714
+              }
+            ],
+            "search": [
+              {
+                "elapsedMs": 5.569906000000628,
+                "responseBytes": 4322
+              },
+              {
+                "elapsedMs": 4.93142699999953,
+                "responseBytes": 4322
+              },
+              {
+                "elapsedMs": 4.992626999999629,
+                "responseBytes": 4322
+              },
+              {
+                "elapsedMs": 5.6723109999984445,
+                "responseBytes": 4322
+              },
+              {
+                "elapsedMs": 5.605773000002955,
+                "responseBytes": 4322
+              },
+              {
+                "elapsedMs": 4.993114000000787,
+                "responseBytes": 4322
+              },
+              {
+                "elapsedMs": 4.5859849999978906,
+                "responseBytes": 4322
+              },
+              {
+                "elapsedMs": 5.440265000001091,
+                "responseBytes": 4322
+              },
+              {
+                "elapsedMs": 5.710428000002139,
+                "responseBytes": 4322
+              },
+              {
+                "elapsedMs": 4.712640999998257,
+                "responseBytes": 4322
+              }
+            ],
+            "photo": [
+              {
+                "elapsedMs": 5.705668999999034,
+                "responseBytes": 6256
+              },
+              {
+                "elapsedMs": 4.780746000000363,
+                "responseBytes": 6256
+              },
+              {
+                "elapsedMs": 4.712730999999621,
+                "responseBytes": 6256
+              },
+              {
+                "elapsedMs": 4.494729000001826,
+                "responseBytes": 6256
+              },
+              {
+                "elapsedMs": 4.623636999996961,
+                "responseBytes": 6256
+              },
+              {
+                "elapsedMs": 4.6898719999990135,
+                "responseBytes": 6256
+              },
+              {
+                "elapsedMs": 5.035310999999638,
+                "responseBytes": 6256
+              },
+              {
+                "elapsedMs": 7.213801000001695,
+                "responseBytes": 6256
+              },
+              {
+                "elapsedMs": 6.798835000001418,
+                "responseBytes": 6256
+              },
+              {
+                "elapsedMs": 5.808512999999948,
+                "responseBytes": 6256
+              }
+            ],
+            "cachedCatalog": [
+              {
+                "elapsedMs": 0.35772499999802676,
+                "responseBytes": 0,
+                "wireResponses": 0
+              },
+              {
+                "elapsedMs": 0.24429199999940465,
+                "responseBytes": 0,
+                "wireResponses": 0
+              },
+              {
+                "elapsedMs": 0.22292599999855156,
+                "responseBytes": 0,
+                "wireResponses": 0
+              },
+              {
+                "elapsedMs": 0.3416799999977229,
+                "responseBytes": 0,
+                "wireResponses": 0
+              },
+              {
+                "elapsedMs": 0.22461200000179815,
+                "responseBytes": 0,
+                "wireResponses": 0
+              },
+              {
+                "elapsedMs": 0.21347600000081002,
+                "responseBytes": 0,
+                "wireResponses": 0
+              },
+              {
+                "elapsedMs": 0.21246900000187452,
+                "responseBytes": 0,
+                "wireResponses": 0
+              },
+              {
+                "elapsedMs": 0.23238299999866285,
+                "responseBytes": 0,
+                "wireResponses": 0
+              },
+              {
+                "elapsedMs": 0.21428499999819905,
+                "responseBytes": 0,
+                "wireResponses": 0
+              },
+              {
+                "elapsedMs": 0.23800500000288594,
+                "responseBytes": 0,
+                "wireResponses": 0
+              }
+            ]
+          }
+        },
+        {
+          "startupMs": 4552.199513,
+          "samples": {
+            "catalog": [
+              {
+                "elapsedMs": 14.84485400000267,
+                "responseBytes": 7713
+              },
+              {
+                "elapsedMs": 12.417365000001155,
+                "responseBytes": 7713
+              },
+              {
+                "elapsedMs": 15.424456000000646,
+                "responseBytes": 7713
+              },
+              {
+                "elapsedMs": 15.171046999996179,
+                "responseBytes": 7713
+              },
+              {
+                "elapsedMs": 18.19400800000585,
+                "responseBytes": 7713
+              },
+              {
+                "elapsedMs": 16.4930250000034,
+                "responseBytes": 7713
+              },
+              {
+                "elapsedMs": 21.82076400000369,
+                "responseBytes": 7713
+              },
+              {
+                "elapsedMs": 19.803782000002684,
+                "responseBytes": 7713
+              },
+              {
+                "elapsedMs": 10.995952999997826,
+                "responseBytes": 7713
+              },
+              {
+                "elapsedMs": 13.618300999994972,
+                "responseBytes": 7714
+              }
+            ],
+            "search": [
+              {
+                "elapsedMs": 10.320596999998088,
+                "responseBytes": 4322
+              },
+              {
+                "elapsedMs": 5.44656699999905,
+                "responseBytes": 4322
+              },
+              {
+                "elapsedMs": 4.7419149999986985,
+                "responseBytes": 4322
+              },
+              {
+                "elapsedMs": 5.429739999999583,
+                "responseBytes": 4322
+              },
+              {
+                "elapsedMs": 4.816326000000117,
+                "responseBytes": 4322
+              },
+              {
+                "elapsedMs": 5.225289000001794,
+                "responseBytes": 4322
+              },
+              {
+                "elapsedMs": 7.81727200000023,
+                "responseBytes": 4322
+              },
+              {
+                "elapsedMs": 8.16413399999874,
+                "responseBytes": 4322
+              },
+              {
+                "elapsedMs": 6.228465000000142,
+                "responseBytes": 4322
+              },
+              {
+                "elapsedMs": 5.410154000004695,
+                "responseBytes": 4322
+              }
+            ],
+            "photo": [
+              {
+                "elapsedMs": 4.9684959999940475,
+                "responseBytes": 6256
+              },
+              {
+                "elapsedMs": 8.422010000002047,
+                "responseBytes": 6256
+              },
+              {
+                "elapsedMs": 5.4612080000006245,
+                "responseBytes": 6256
+              },
+              {
+                "elapsedMs": 6.499159999999392,
+                "responseBytes": 6256
+              },
+              {
+                "elapsedMs": 8.013538999999582,
+                "responseBytes": 6256
+              },
+              {
+                "elapsedMs": 5.59980799999903,
+                "responseBytes": 6256
+              },
+              {
+                "elapsedMs": 5.363720000001194,
+                "responseBytes": 6256
+              },
+              {
+                "elapsedMs": 5.499835000002349,
+                "responseBytes": 6256
+              },
+              {
+                "elapsedMs": 5.526071999993292,
+                "responseBytes": 6256
+              },
+              {
+                "elapsedMs": 4.955480999997235,
+                "responseBytes": 6256
+              }
+            ],
+            "cachedCatalog": [
+              {
+                "elapsedMs": 0.3308820000020205,
+                "responseBytes": 0,
+                "wireResponses": 0
+              },
+              {
+                "elapsedMs": 0.2388040000005276,
+                "responseBytes": 0,
+                "wireResponses": 0
+              },
+              {
+                "elapsedMs": 0.22144599999592174,
+                "responseBytes": 0,
+                "wireResponses": 0
+              },
+              {
+                "elapsedMs": 0.2150370000017574,
+                "responseBytes": 0,
+                "wireResponses": 0
+              },
+              {
+                "elapsedMs": 0.33745099999941885,
+                "responseBytes": 0,
+                "wireResponses": 0
+              },
+              {
+                "elapsedMs": 0.22437499999796273,
+                "responseBytes": 0,
+                "wireResponses": 0
+              },
+              {
+                "elapsedMs": 0.2112909999996191,
+                "responseBytes": 0,
+                "wireResponses": 0
+              },
+              {
+                "elapsedMs": 0.21140500000183238,
+                "responseBytes": 0,
+                "wireResponses": 0
+              },
+              {
+                "elapsedMs": 0.21025899999949615,
+                "responseBytes": 0,
+                "wireResponses": 0
+              },
+              {
+                "elapsedMs": 0.2321269999956712,
+                "responseBytes": 0,
+                "wireResponses": 0
+              }
+            ]
+          }
+        },
+        {
+          "startupMs": 4530.788753000001,
+          "samples": {
+            "catalog": [
+              {
+                "elapsedMs": 15.635054999998829,
+                "responseBytes": 7713
+              },
+              {
+                "elapsedMs": 12.471783000000869,
+                "responseBytes": 7713
+              },
+              {
+                "elapsedMs": 12.07379700000456,
+                "responseBytes": 7713
+              },
+              {
+                "elapsedMs": 20.148402999999234,
+                "responseBytes": 7713
+              },
+              {
+                "elapsedMs": 11.895925999997417,
+                "responseBytes": 7713
+              },
+              {
+                "elapsedMs": 11.534588000002259,
+                "responseBytes": 7713
+              },
+              {
+                "elapsedMs": 11.023793000000296,
+                "responseBytes": 7713
+              },
+              {
+                "elapsedMs": 12.487199000002875,
+                "responseBytes": 7713
+              },
+              {
+                "elapsedMs": 10.964675000002899,
+                "responseBytes": 7713
+              },
+              {
+                "elapsedMs": 10.252189999999246,
+                "responseBytes": 7714
+              }
+            ],
+            "search": [
+              {
+                "elapsedMs": 6.034712999993644,
+                "responseBytes": 4322
+              },
+              {
+                "elapsedMs": 7.72948699999688,
+                "responseBytes": 4322
+              },
+              {
+                "elapsedMs": 6.987130000001343,
+                "responseBytes": 4322
+              },
+              {
+                "elapsedMs": 5.8548289999962435,
+                "responseBytes": 4322
+              },
+              {
+                "elapsedMs": 5.371332999995502,
+                "responseBytes": 4322
+              },
+              {
+                "elapsedMs": 5.395421000001079,
+                "responseBytes": 4322
+              },
+              {
+                "elapsedMs": 5.667895000005956,
+                "responseBytes": 4322
+              },
+              {
+                "elapsedMs": 6.834943000001658,
+                "responseBytes": 4322
+              },
+              {
+                "elapsedMs": 6.012502999998105,
+                "responseBytes": 4322
+              },
+              {
+                "elapsedMs": 7.6257689999983995,
+                "responseBytes": 4322
+              }
+            ],
+            "photo": [
+              {
+                "elapsedMs": 8.475471999998263,
+                "responseBytes": 6256
+              },
+              {
+                "elapsedMs": 7.113744999995106,
+                "responseBytes": 6256
+              },
+              {
+                "elapsedMs": 11.93856400000368,
+                "responseBytes": 6256
+              },
+              {
+                "elapsedMs": 6.115669999999227,
+                "responseBytes": 6256
+              },
+              {
+                "elapsedMs": 6.422450000005483,
+                "responseBytes": 6256
+              },
+              {
+                "elapsedMs": 6.625865000001795,
+                "responseBytes": 6256
+              },
+              {
+                "elapsedMs": 8.586639999994077,
+                "responseBytes": 6256
+              },
+              {
+                "elapsedMs": 10.41401500000211,
+                "responseBytes": 6256
+              },
+              {
+                "elapsedMs": 5.597868000004382,
+                "responseBytes": 6256
+              },
+              {
+                "elapsedMs": 9.016095000006317,
+                "responseBytes": 6256
+              }
+            ],
+            "cachedCatalog": [
+              {
+                "elapsedMs": 0.4783039999965695,
+                "responseBytes": 0,
+                "wireResponses": 0
+              },
+              {
+                "elapsedMs": 0.3960140000053798,
+                "responseBytes": 0,
+                "wireResponses": 0
+              },
+              {
+                "elapsedMs": 0.3565200000011828,
+                "responseBytes": 0,
+                "wireResponses": 0
+              },
+              {
+                "elapsedMs": 0.3324369999972987,
+                "responseBytes": 0,
+                "wireResponses": 0
+              },
+              {
+                "elapsedMs": 0.45240499999636086,
+                "responseBytes": 0,
+                "wireResponses": 0
+              },
+              {
+                "elapsedMs": 0.6112559999965015,
+                "responseBytes": 0,
+                "wireResponses": 0
+              },
+              {
+                "elapsedMs": 0.36157700000330806,
+                "responseBytes": 0,
+                "wireResponses": 0
+              },
+              {
+                "elapsedMs": 0.35231699999712873,
+                "responseBytes": 0,
+                "wireResponses": 0
+              },
+              {
+                "elapsedMs": 0.31926499999826774,
+                "responseBytes": 0,
+                "wireResponses": 0
+              },
+              {
+                "elapsedMs": 0.36840200000006007,
+                "responseBytes": 0,
+                "wireResponses": 0
+              }
+            ]
+          }
+        },
+        {
+          "startupMs": 4822.774887000007,
+          "samples": {
+            "catalog": [
+              {
+                "elapsedMs": 14.38884600000165,
+                "responseBytes": 7713
+              },
+              {
+                "elapsedMs": 12.250694000002113,
+                "responseBytes": 7713
+              },
+              {
+                "elapsedMs": 11.439268000001903,
+                "responseBytes": 7713
+              },
+              {
+                "elapsedMs": 10.80756499999552,
+                "responseBytes": 7713
+              },
+              {
+                "elapsedMs": 11.391220000004978,
+                "responseBytes": 7713
+              },
+              {
+                "elapsedMs": 11.124384999988251,
+                "responseBytes": 7713
+              },
+              {
+                "elapsedMs": 10.885350999989896,
+                "responseBytes": 7713
+              },
+              {
+                "elapsedMs": 12.842638000001898,
+                "responseBytes": 7713
+              },
+              {
+                "elapsedMs": 13.146001000000979,
+                "responseBytes": 7713
+              },
+              {
+                "elapsedMs": 16.68497899999784,
+                "responseBytes": 7714
+              }
+            ],
+            "search": [
+              {
+                "elapsedMs": 6.054604000004474,
+                "responseBytes": 4322
+              },
+              {
+                "elapsedMs": 5.0652980000013486,
+                "responseBytes": 4322
+              },
+              {
+                "elapsedMs": 5.082891999991261,
+                "responseBytes": 4322
+              },
+              {
+                "elapsedMs": 5.613924999997835,
+                "responseBytes": 4322
+              },
+              {
+                "elapsedMs": 4.977104000005056,
+                "responseBytes": 4322
+              },
+              {
+                "elapsedMs": 5.938816000008956,
+                "responseBytes": 4322
+              },
+              {
+                "elapsedMs": 4.832395000004908,
+                "responseBytes": 4322
+              },
+              {
+                "elapsedMs": 5.1233050000009825,
+                "responseBytes": 4322
+              },
+              {
+                "elapsedMs": 7.230817000003299,
+                "responseBytes": 4322
+              },
+              {
+                "elapsedMs": 7.747730000002775,
+                "responseBytes": 4322
+              }
+            ],
+            "photo": [
+              {
+                "elapsedMs": 4.801219000000856,
+                "responseBytes": 6256
+              },
+              {
+                "elapsedMs": 4.831137000001036,
+                "responseBytes": 6256
+              },
+              {
+                "elapsedMs": 4.4465239999990445,
+                "responseBytes": 6256
+              },
+              {
+                "elapsedMs": 4.754717000003438,
+                "responseBytes": 6256
+              },
+              {
+                "elapsedMs": 5.781096999999136,
+                "responseBytes": 6256
+              },
+              {
+                "elapsedMs": 4.592545999999857,
+                "responseBytes": 6256
+              },
+              {
+                "elapsedMs": 4.389729999995325,
+                "responseBytes": 6256
+              },
+              {
+                "elapsedMs": 5.0355450000060955,
+                "responseBytes": 6256
+              },
+              {
+                "elapsedMs": 5.600286000000779,
+                "responseBytes": 6256
+              },
+              {
+                "elapsedMs": 4.273793000000296,
+                "responseBytes": 6256
+              }
+            ],
+            "cachedCatalog": [
+              {
+                "elapsedMs": 0.3278160000045318,
+                "responseBytes": 0,
+                "wireResponses": 0
+              },
+              {
+                "elapsedMs": 0.23863700000219978,
+                "responseBytes": 0,
+                "wireResponses": 0
+              },
+              {
+                "elapsedMs": 0.22094500000821427,
+                "responseBytes": 0,
+                "wireResponses": 0
+              },
+              {
+                "elapsedMs": 0.21608100000594277,
+                "responseBytes": 0,
+                "wireResponses": 0
+              },
+              {
+                "elapsedMs": 0.23467400000663474,
+                "responseBytes": 0,
+                "wireResponses": 0
+              },
+              {
+                "elapsedMs": 0.21471800000290386,
+                "responseBytes": 0,
+                "wireResponses": 0
+              },
+              {
+                "elapsedMs": 0.21002399999997579,
+                "responseBytes": 0,
+                "wireResponses": 0
+              },
+              {
+                "elapsedMs": 0.21009000000776723,
+                "responseBytes": 0,
+                "wireResponses": 0
+              },
+              {
+                "elapsedMs": 0.210242000001017,
+                "responseBytes": 0,
+                "wireResponses": 0
+              },
+              {
+                "elapsedMs": 0.3355379999993602,
+                "responseBytes": 0,
+                "wireResponses": 0
+              }
+            ]
+          }
+        },
+        {
+          "startupMs": 5442.763590999995,
+          "samples": {
+            "catalog": [
+              {
+                "elapsedMs": 14.785241999998107,
+                "responseBytes": 7713
+              },
+              {
+                "elapsedMs": 12.789667999997619,
+                "responseBytes": 7713
+              },
+              {
+                "elapsedMs": 13.8871969999891,
+                "responseBytes": 7713
+              },
+              {
+                "elapsedMs": 26.245750000001863,
+                "responseBytes": 7713
+              },
+              {
+                "elapsedMs": 12.889667000010377,
+                "responseBytes": 7713
+              },
+              {
+                "elapsedMs": 14.385467999993125,
+                "responseBytes": 7713
+              },
+              {
+                "elapsedMs": 18.049053999988246,
+                "responseBytes": 7713
+              },
+              {
+                "elapsedMs": 12.48171100000036,
+                "responseBytes": 7713
+              },
+              {
+                "elapsedMs": 12.84761399999843,
+                "responseBytes": 7713
+              },
+              {
+                "elapsedMs": 9.889538999996148,
+                "responseBytes": 7714
+              }
+            ],
+            "search": [
+              {
+                "elapsedMs": 6.614051999989897,
+                "responseBytes": 4322
+              },
+              {
+                "elapsedMs": 8.101741000005859,
+                "responseBytes": 4322
+              },
+              {
+                "elapsedMs": 5.506991000002017,
+                "responseBytes": 4322
+              },
+              {
+                "elapsedMs": 6.892948999986402,
+                "responseBytes": 4322
+              },
+              {
+                "elapsedMs": 4.921480999997584,
+                "responseBytes": 4322
+              },
+              {
+                "elapsedMs": 5.92238799999177,
+                "responseBytes": 4322
+              },
+              {
+                "elapsedMs": 5.466453000000911,
+                "responseBytes": 4322
+              },
+              {
+                "elapsedMs": 6.512612999998964,
+                "responseBytes": 4322
+              },
+              {
+                "elapsedMs": 5.758939999999711,
+                "responseBytes": 4322
+              },
+              {
+                "elapsedMs": 5.109851000001072,
+                "responseBytes": 4322
+              }
+            ],
+            "photo": [
+              {
+                "elapsedMs": 10.257621999990079,
+                "responseBytes": 6256
+              },
+              {
+                "elapsedMs": 7.589783000003081,
+                "responseBytes": 6256
+              },
+              {
+                "elapsedMs": 5.065161999998963,
+                "responseBytes": 6256
+              },
+              {
+                "elapsedMs": 10.11277500000142,
+                "responseBytes": 6256
+              },
+              {
+                "elapsedMs": 8.830266000004485,
+                "responseBytes": 6256
+              },
+              {
+                "elapsedMs": 6.381037000013748,
+                "responseBytes": 6256
+              },
+              {
+                "elapsedMs": 6.9067009999998845,
+                "responseBytes": 6256
+              },
+              {
+                "elapsedMs": 9.760861000002478,
+                "responseBytes": 6256
+              },
+              {
+                "elapsedMs": 5.22678700000688,
+                "responseBytes": 6256
+              },
+              {
+                "elapsedMs": 7.151267999986885,
+                "responseBytes": 6256
+              }
+            ],
+            "cachedCatalog": [
+              {
+                "elapsedMs": 0.3004769999970449,
+                "responseBytes": 0,
+                "wireResponses": 0
+              },
+              {
+                "elapsedMs": 0.24191799999971408,
+                "responseBytes": 0,
+                "wireResponses": 0
+              },
+              {
+                "elapsedMs": 0.43421500000113156,
+                "responseBytes": 0,
+                "wireResponses": 0
+              },
+              {
+                "elapsedMs": 0.2475340000091819,
+                "responseBytes": 0,
+                "wireResponses": 0
+              },
+              {
+                "elapsedMs": 0.2176000000035856,
+                "responseBytes": 0,
+                "wireResponses": 0
+              },
+              {
+                "elapsedMs": 0.2135649999981979,
+                "responseBytes": 0,
+                "wireResponses": 0
+              },
+              {
+                "elapsedMs": 0.5346819999977015,
+                "responseBytes": 0,
+                "wireResponses": 0
+              },
+              {
+                "elapsedMs": 0.23154399999475572,
+                "responseBytes": 0,
+                "wireResponses": 0
+              },
+              {
+                "elapsedMs": 0.32568499998888,
+                "responseBytes": 0,
+                "wireResponses": 0
+              },
+              {
+                "elapsedMs": 0.251390999997966,
+                "responseBytes": 0,
+                "wireResponses": 0
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "resourceFilteringControl": {
+    "fixture": "two 512 KiB image responses",
+    "rounds": 10,
+    "warmupPairsExcluded": 1,
+    "alternatingOrder": true,
+    "lifecycle": "page creation, load, extraction and close; both modes on the same browser and image",
+    "baseline": "unfiltered control reproducing pre-optimization resource behavior",
+    "before": {
+      "assetBytes": 1048712,
+      "assetRequests": 2,
+      "elapsedMs": 932.987,
+      "p95ElapsedMs": 1240.931,
+      "minElapsedMs": 818.439,
+      "maxElapsedMs": 1240.931
+    },
+    "after": {
+      "assetBytes": 0,
+      "assetRequests": 0,
+      "elapsedMs": 964.897,
+      "p95ElapsedMs": 1521.642,
+      "minElapsedMs": 868.807,
+      "maxElapsedMs": 1521.642
+    },
+    "preservedPhotoUrls": 2,
+    "measurements": [
+      {
+        "after": {
+          "assetBytes": 0,
+          "assetRequests": 0,
+          "elapsedMs": 868.8067169999995,
+          "urls": ["/photo1.png", "/photo2.png"]
+        },
+        "before": {
+          "assetBytes": 1048712,
+          "assetRequests": 2,
+          "elapsedMs": 961.9175700000005,
+          "urls": ["/photo1.png", "/photo2.png"]
+        }
+      },
+      {
+        "before": {
+          "assetBytes": 1048712,
+          "assetRequests": 2,
+          "elapsedMs": 937.6651210000009,
+          "urls": ["/photo1.png", "/photo2.png"]
+        },
+        "after": {
+          "assetBytes": 0,
+          "assetRequests": 0,
+          "elapsedMs": 978.2421780000004,
+          "urls": ["/photo1.png", "/photo2.png"]
+        }
+      },
+      {
+        "after": {
+          "assetBytes": 0,
+          "assetRequests": 0,
+          "elapsedMs": 951.5522520000013,
+          "urls": ["/photo1.png", "/photo2.png"]
+        },
+        "before": {
+          "assetBytes": 1048712,
+          "assetRequests": 2,
+          "elapsedMs": 1240.9307270000008,
+          "urls": ["/photo1.png", "/photo2.png"]
+        }
+      },
+      {
+        "before": {
+          "assetBytes": 1048712,
+          "assetRequests": 2,
+          "elapsedMs": 977.5418019999997,
+          "urls": ["/photo1.png", "/photo2.png"]
+        },
+        "after": {
+          "assetBytes": 0,
+          "assetRequests": 0,
+          "elapsedMs": 905.4319309999992,
+          "urls": ["/photo1.png", "/photo2.png"]
+        }
+      },
+      {
+        "after": {
+          "assetBytes": 0,
+          "assetRequests": 0,
+          "elapsedMs": 1002.333181,
+          "urls": ["/photo1.png", "/photo2.png"]
+        },
+        "before": {
+          "assetBytes": 1048712,
+          "assetRequests": 2,
+          "elapsedMs": 1033.8451129999994,
+          "urls": ["/photo1.png", "/photo2.png"]
+        }
+      },
+      {
+        "before": {
+          "assetBytes": 1048712,
+          "assetRequests": 2,
+          "elapsedMs": 818.438712000001,
+          "urls": ["/photo1.png", "/photo2.png"]
+        },
+        "after": {
+          "assetBytes": 0,
+          "assetRequests": 0,
+          "elapsedMs": 901.0283869999985,
+          "urls": ["/photo1.png", "/photo2.png"]
+        }
+      },
+      {
+        "after": {
+          "assetBytes": 0,
+          "assetRequests": 0,
+          "elapsedMs": 926.9685449999997,
+          "urls": ["/photo1.png", "/photo2.png"]
+        },
+        "before": {
+          "assetBytes": 1048712,
+          "assetRequests": 2,
+          "elapsedMs": 884.7124889999977,
+          "urls": ["/photo1.png", "/photo2.png"]
+        }
+      },
+      {
+        "before": {
+          "assetBytes": 1048712,
+          "assetRequests": 2,
+          "elapsedMs": 868.1324779999995,
+          "urls": ["/photo1.png", "/photo2.png"]
+        },
+        "after": {
+          "assetBytes": 0,
+          "assetRequests": 0,
+          "elapsedMs": 1521.642307000002,
+          "urls": ["/photo1.png", "/photo2.png"]
+        }
+      },
+      {
+        "after": {
+          "assetBytes": 0,
+          "assetRequests": 0,
+          "elapsedMs": 1158.8305100000034,
+          "urls": ["/photo1.png", "/photo2.png"]
+        },
+        "before": {
+          "assetBytes": 1048712,
+          "assetRequests": 2,
+          "elapsedMs": 928.3096929999992,
+          "urls": ["/photo1.png", "/photo2.png"]
+        }
+      },
+      {
+        "before": {
+          "assetBytes": 1048712,
+          "assetRequests": 2,
+          "elapsedMs": 900.09231,
+          "urls": ["/photo1.png", "/photo2.png"]
+        },
+        "after": {
+          "assetBytes": 0,
+          "assetRequests": 0,
+          "elapsedMs": 1041.362240999999,
+          "urls": ["/photo1.png", "/photo2.png"]
+        }
+      }
+    ]
+  }
+}

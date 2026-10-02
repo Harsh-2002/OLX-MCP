@@ -163,3 +163,6 @@ For live website checks, install Chromium and run `npm run test:integration`.
 ## License
 
 [MIT](LICENSE).
+
+Measured performance results and repeatable comparisons are documented in
+[Benchmarks](docs/benchmarks.md).
