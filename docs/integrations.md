@@ -1,9 +1,9 @@
 # Client integrations
 
 Install Docker and pull `ghcr.io/harsh-2002/olx-mcp:latest` before connecting.
-The image serves stdio MCP and requires protocol **2026-07-28**. It has no HTTP
-endpoint. Client registration alone does not verify a connection; use the
-client's MCP status or probe command before asking it to search.
+The image connects over stdio; let your client launch the Docker process.
+Use the client's MCP status or probe command to check the connection before
+asking it to search.
 
 [The README](../README.md#connect-your-client) contains the shortest setup recipes.
 Commands use POSIX shell syntax. On PowerShell, set the corresponding environment
@@ -11,8 +11,8 @@ variables with `$env:NAME = "value"` before starting the client.
 
 ## Codex
 
-The installed Codex CLI 0.159.3 exposes the `mcp_2026_07_28` feature flag. Enable
-it when starting Codex, as shown in the README. To persist the setting instead:
+Use the registration and startup commands in the README. To persist the
+startup setting instead:
 
 ```bash
 codex features enable mcp_2026_07_28
@@ -21,12 +21,12 @@ codex features enable mcp_2026_07_28
 For slow searches, set `tool_timeout_sec = 180` under `[mcp_servers.olx]` in
 `~/.codex/config.toml`. The CLI, app, and IDE extension share this configuration
 on the same host. `codex mcp list` shows registered servers; check `/mcp` in a
-running session for availability. Releases without the modern feature need an
-upgrade.
+running session for availability.
 
 [Official Codex MCP documentation](https://learn.chatgpt.com/docs/extend/mcp?surface=cli).
-The feature flag and registration syntax were checked against the local CLI;
-this documentation change does not claim an end-to-end Codex agent test.
+The registration syntax and startup setting were checked against the local CLI.
+The registration command includes the per-server environment setting needed by
+that CLI; it configures Codex and does not change the Docker image.
 
 ## Claude Code
 
@@ -36,8 +36,7 @@ Use the v2 MCP runtime and enable modern negotiation for stdio servers:
 MCP_SDK_GENERATION=v2 MCP_PROTOCOL_NEGOTIATION=auto claude
 ```
 
-A current release is recommended; v2 runtime selection is available in the
-versions described in [Anthropic's MCP client runtime documentation](https://code.claude.com/docs/en/mcp#mcp-client-runtimes).
+See [Claude Code runtime settings](https://code.claude.com/docs/en/mcp#mcp-client-runtimes).
 After registration, start a fresh session and use `/mcp` to verify the connection.
 For slow calls, set `MCP_TOOL_TIMEOUT=180000` in the client environment, or use
 its per-server `timeout` setting. These are client settings, not environment
@@ -45,20 +44,18 @@ variables inside the Docker container.
 
 ## OpenCode
 
-Use OpenCode v2's `mcp.servers` configuration and set `protocol` to
-`"2026-07-28"`. Its default is a legacy handshake, which this server rejects.
+Use `mcp.servers` with `protocol: "auto"`, as shown in the README.
+Automatic negotiation connects using the protocol offered by the server.
 Merge the README's `olx` entry into your existing config rather than replacing
 other servers. The global configuration is `~/.config/opencode/opencode.json`.
-Run `opencode mcp list` to check connectivity.
+Run `opencode mcp list` to check connectivity, or use `/mcps` in a session.
 
 [Official OpenCode MCP configuration and protocol settings](https://opencode.ai/v2/docs/mcp-servers).
 
 ## Hermes
 
-Current Hermes uses `protocol: auto` by default, trying modern discovery when a
-server rejects its initial legacy handshake. The README's CLI installer probes
-the server before saving it. To start with modern discovery directly, merge this
-entry into `~/.hermes/config.yaml`:
+The README's installer checks the connection before saving it. For manual setup,
+merge this entry into `~/.hermes/config.yaml`:
 
 ```yaml
 mcp_servers:
@@ -93,11 +90,9 @@ The README's commands use OpenClaw's built-in MCP registry. Docker must be
 available to the Gateway or runtime that owns the connection. Run
 `openclaw mcp doctor olx --probe` after registration.
 
-The selected runtime must support MCP 2026-07-28. The reviewed OpenClaw registry
-documentation does not establish that every runtime negotiates this revision,
-and OpenClaw has not been tested end to end with this server. If the probe reports
-Unsupported Protocol Version, upgrade or select a modern-capable runtime; saving
-the registration does not fix protocol incompatibility.
+Check that the probe succeeds before starting a chat. If it reports a protocol
+error, update the client or select a compatible runtime. OpenClaw has not been
+tested end to end with this server.
 
 [Official OpenClaw connection guide](https://docs.openclaw.ai/tools/mcp) and
 [MCP registry reference](https://docs.openclaw.ai/cli/mcp/registry).
@@ -128,18 +123,28 @@ For clients using `mcpServers` JSON, merge this entry into their MCP configurati
 ```
 
 Cursor commonly uses `.cursor/mcp.json` in a project or `~/.cursor/mcp.json`
-globally. Claude Desktop uses its desktop MCP configuration. Both require a
-release supporting this server's protocol; these paths and the JSON shape alone
-are not a compatibility guarantee.
+globally. Claude Desktop uses its desktop MCP configuration. Restart the MCP
+connection after saving the configuration.
 
-For VS Code's `.vscode/mcp.json`, use `servers` instead of `mcpServers` and add
-`"type": "stdio"` to the server entry. Check that the installed MCP host supports
-2026-07-28 before using it. Photo display and vision analysis depend on the client
-and selected model.
+VS Code also supports this portable `mcpServers` shape in a project `.mcp.json`
+or user `~/.copilot/mcp-config.json`. For an existing `.vscode/mcp.json`, use
+`servers` instead of `mcpServers` and add `"type": "stdio"` to the server entry.
+Run **MCP: List Servers** from the Command Palette and start `olx`.
 
-See the [official OpenAI client configuration examples](https://developers.openai.com/learn/docs-mcp)
-for Cursor and VS Code configuration shapes. The examples there demonstrate
-registration; they do not establish compatibility with this server's protocol.
+[Cursor configuration](https://cursor.com/docs/mcp) and
+[VS Code configuration](https://code.visualstudio.com/docs/agent-customization/mcp-servers).
+Photo display and vision analysis depend on the client and selected model.
+
+## Connection checks
+
+Docker must be installed and running where the client launches its commands.
+After registration, use the client's status or probe command to confirm that
+`olx` connects. If Docker is not found, use its absolute executable path.
+For protocol errors, see [protocol troubleshooting](mcp-protocol.md).
+
+The MCP SDK and Hermes have been tested with this server. The other recipes were
+checked against official documentation; registration does not establish a full
+agent test for each client.
 
 ## Source installation
 
@@ -154,4 +159,4 @@ npm run build
 ```
 
 Use `node /absolute/path/to/OLX-MCP/dist/index.js` as the stdio command instead
-of Docker. The same protocol requirements apply.
+of Docker.
