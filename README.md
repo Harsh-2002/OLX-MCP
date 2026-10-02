@@ -14,6 +14,8 @@ also require enabling modern protocol negotiation. See [protocol requirements](d
 
 The recommended installation is the GHCR image. It includes Node.js, Chromium,
 and the required system libraries; only Docker is needed on your machine.
+The first published `linux/amd64` build is about 305 MB to download and 1.03 GB
+uncompressed.
 
 ```bash
 docker pull ghcr.io/harsh-2002/olx-mcp:latest

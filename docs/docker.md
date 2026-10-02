@@ -129,10 +129,18 @@ requires an external display and additional desktop configuration.
 
 Full Chromium replaces the smaller headless-shell build because live India and
 Indonesia requests failed with the shell and succeeded with full Chromium.
-On linux/amd64, the full-Chromium image reports approximately 1.06 GB
-(1,060,945,919 bytes) through `docker image inspect`, compared with about
-847 MB for the shell image. The increase is approximately 214 MB (25%).
-Docker local size is not a registry download size.
+The first published GHCR build on 2026-10-02 targets `linux/amd64` and reports
+1,032,703,476 bytes (approximately 1.03 GB) through `docker image inspect`.
+Its registry manifest contains 305,053,413 bytes of compressed layers
+(approximately 305 MB) for a fresh pull. Existing cached layers reduce downloads.
+The verified registry digest is
+`sha256:b66b40c94f05bbd93eccf5ae7eab0bd3dd48a8c7429dc21193726debcd0459a1`,
+built from commit `8fd3518fb8ff6c766f3681799c29468c2f510c35`.
+
+An earlier local full-Chromium build reported 1,060,945,919 bytes; that is the
+build measured in [the benchmark report](benchmarks.md). The previous shell
+image was approximately 847 MB. Sizes vary with installed system packages;
+local image size and compressed registry download size measure different things.
 
 ## Performance and photo checks
 
