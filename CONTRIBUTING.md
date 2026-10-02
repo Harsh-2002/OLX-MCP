@@ -57,7 +57,10 @@ anonymous pulls. See
 [Docker publishing](docs/docker.md#publishing-to-ghcr) for the first-publication
 steps and verification commands.
 
-CI on `main` and pull requests runs the full validation suite on Node.js 22 and 24.
+CI on `main` and pull requests runs the full validation suite on Node.js 22 and 24
+on Ubuntu 24.04. Workflow actions use their current stable Node.js 24 runtime
+releases. Keep the explicit runner image and action versions reviewed when
+updating CI.
 Live website tests remain opt-in because they depend on external sites.
 
 ## Licensing
