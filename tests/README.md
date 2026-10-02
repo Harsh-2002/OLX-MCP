@@ -109,3 +109,7 @@ fixture verifies modern discovery, structured data and image blocks, execution
 errors, unknown-tool protocol errors, cancellation, and rejection of a legacy
 `initialize` request. Server unit tests also verify ISO date serialization and
 rejection of output that does not match the advertised schema.
+
+Docker CI runs the offline runtime checks on native AMD64 and ARM64 Ubuntu 24.04
+runners. The publishing workflow repeats those checks before and after each
+platform digest is uploaded, then combines both verified images under `latest`.

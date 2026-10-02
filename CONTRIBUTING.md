@@ -46,8 +46,10 @@ Docker images are distributed through `ghcr.io/harsh-2002/olx-mcp`. npm publishi
 is not part of the current distribution workflow.
 
 Maintainers run the **Publish Docker image** workflow manually from `main` after
-reviewing the changes. It runs full CI, builds a `linux/amd64` image, and tests
-real Chromium and MCP behavior before pushing that exact image to GHCR. It uses
+reviewing the changes. It runs full CI and tests real Chromium and MCP behavior
+on native AMD64 and ARM64 runners. It pushes verified platform images by digest,
+then publishes a
+single `latest` manifest containing both architectures. It uses
 the repository's `GITHUB_TOKEN` with `packages: write`; no npm or registry token
 secret is needed. No Git tag or GitHub release is created.
 
@@ -58,7 +60,8 @@ anonymous pulls. See
 steps and verification commands.
 
 CI on `main` and pull requests runs the full validation suite on Node.js 22 and 24
-on Ubuntu 24.04. Workflow actions use their current stable Node.js 24 runtime
+on Ubuntu 24.04. Docker checks also run on native AMD64 and ARM64 runners.
+Workflow actions use their current stable Node.js 24 runtime
 releases. Keep the explicit runner image and action versions reviewed when
 updating CI.
 Live website tests remain opt-in because they depend on external sites.

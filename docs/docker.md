@@ -7,11 +7,10 @@ docker pull ghcr.io/harsh-2002/olx-mcp:latest
 docker run --rm ghcr.io/harsh-2002/olx-mcp:latest --version
 ```
 
-The public image includes Chromium and its system libraries. Published images
-currently support `linux/amd64`; ARM hosts need amd64 emulation and
-`--platform=linux/amd64`. The only published tag is `latest`, which selects the
-most recent manually published build. Pull it again and restart the MCP client
-to update.
+The public image includes Chromium and its system libraries. The single `latest`
+manifest contains `linux/amd64` and `linux/arm64` images. Docker selects your
+machine's architecture automatically, including Apple Silicon and ARM64 Linux
+hosts. Pull it again and restart the MCP client to update.
 
 ## Build locally
 
@@ -180,11 +179,23 @@ samples and the limits of the timing claims.
 
 Run the **Publish Docker image** workflow from the repository's Actions tab,
 selecting `main`. Publishing is manual and does not create an npm package, Git
-tag, or GitHub release. The workflow runs `npm run ci`, builds the runtime image,
-and runs offline real-Chromium/MCP checks before logging into GHCR with the
-repository's `GITHUB_TOKEN`. It pushes the tested image under `latest`, then
-pulls the published digest and runs the Docker checks again. The image label
-records the source commit, and the run summary records the registry digest.
+tag, or GitHub release. Native Ubuntu 24.04 runners for AMD64 and ARM64 each run
+`npm run ci`, build the runtime image, and run offline real-Chromium/MCP checks.
+Each platform is pushed by digest using the repository's `GITHUB_TOKEN`, with no
+architecture tags. The workflow compares the pushed image configuration against
+the tested build, pulls that digest, and reruns Docker checks on the native host.
+
+Only after both platform jobs pass does the final job publish `latest` as a
+multi-platform manifest. It verifies that the manifest contains exactly the two
+tested platform digests and that `latest` is the only tag. If either native build
+or test fails, the existing `latest` manifest remains unchanged. The image labels
+record the source commit, and the run summary records the platform digests.
+
+Inspect the published platforms:
+
+```bash
+docker buildx imagetools inspect ghcr.io/harsh-2002/olx-mcp:latest
+```
 
 On the first publication, GitHub creates the package with private visibility.
 Open [the package settings](https://github.com/users/Harsh-2002/packages/container/olx-mcp/settings)

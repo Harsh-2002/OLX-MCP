@@ -1,8 +1,8 @@
 {
   "mcpServers": {
-    "olx-mcp": {
-      "command": "node",
-      "args": ["/absolute/path/to/OLX-MCP/dist/index.js"]
+    "olx": {
+      "command": "docker",
+      "args": ["run", "--rm", "-i", "--shm-size=256m", "ghcr.io/harsh-2002/olx-mcp:latest"]
     }
   }
 }

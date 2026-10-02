@@ -1,203 +1,121 @@
 # OLX MCP
 
-An MCP server for searching OLX listings and getting listing details.
+Search OLX listings, view details, and show listing photos from your AI assistant.
+Supports Portugal, Poland, Bulgaria, Romania, Ukraine, India, Indonesia,
+Kazakhstan, and Uzbekistan.
 
-Country adapters cover Portugal, Poland, Bulgaria, Romania, Ukraine, India,
-Indonesia, Kazakhstan, and Uzbekistan. Live verification results are tracked per country. See [Country capabilities](docs/countries.md).
+## Quick start
 
-This server requires **MCP 2026-07-28**. Earlier protocol versions are rejected.
-Clients must support modern `server/discover` and per-request metadata. The
-TypeScript implementation uses SDK v2; updating a client dependency alone may
-also require enabling modern protocol negotiation. See [protocol requirements](docs/mcp-protocol.md).
-
-## Quick start with Docker
-
-The recommended installation is the GHCR image. It includes Node.js, Chromium,
-and the required system libraries; only Docker is needed on your machine.
-The first published `linux/amd64` build is about 305 MB to download and 1.03 GB
-uncompressed.
+Install Docker, then pull the image:
 
 ```bash
 docker pull ghcr.io/harsh-2002/olx-mcp:latest
 ```
 
-Add this to your MCP client's configuration:
+One image supports AMD64 and ARM64, including Apple Silicon. Node.js and Chromium
+are included. No OLX account or API key is needed.
+
+To start the stdio server directly:
+
+```bash
+docker run --rm -i --shm-size=256m ghcr.io/harsh-2002/olx-mcp:latest
+```
+
+The server waits for an MCP client. For everyday use, let your client start it
+with one of the setups below. Use a current client with **MCP 2026-07-28** support.
+
+## Connect your client
+
+<details>
+<summary>Codex CLI</summary>
+
+```bash
+codex mcp add olx -- docker run --rm -i --shm-size=256m ghcr.io/harsh-2002/olx-mcp:latest
+codex --enable mcp_2026_07_28
+```
+
+</details>
+
+<details>
+<summary>Claude Code CLI</summary>
+
+```bash
+claude mcp add --scope user --transport stdio olx -- docker run --rm -i --shm-size=256m ghcr.io/harsh-2002/olx-mcp:latest
+MCP_SDK_GENERATION=v2 MCP_PROTOCOL_NEGOTIATION=auto claude
+```
+
+Use a current Claude Code release. Check the connection with `/mcp`.
+
+</details>
+
+<details>
+<summary>OpenCode v2</summary>
+
+Add this entry under `mcp.servers` in your `opencode.json` or `opencode.jsonc`,
+then start `opencode`:
 
 ```json
 {
-  "mcpServers": {
-    "olx-mcp": {
-      "command": "docker",
-      "args": [
-        "run",
-        "--rm",
-        "-i",
-        "--shm-size=256m",
-        "--read-only",
-        "--tmpfs",
-        "/tmp:rw,nosuid,size=256m",
-        "ghcr.io/harsh-2002/olx-mcp:latest"
-      ]
+  "mcp": {
+    "servers": {
+      "olx": {
+        "type": "local",
+        "command": [
+          "docker",
+          "run",
+          "--rm",
+          "-i",
+          "--shm-size=256m",
+          "ghcr.io/harsh-2002/olx-mcp:latest"
+        ],
+        "protocol": "2026-07-28"
+      }
     }
   }
 }
 ```
 
-Restart the client after updating its configuration. The client starts the
-container and owns its lifetime. The image serves MCP over stdin/stdout and
-requires a client that supports MCP 2026-07-28. There is no HTTP endpoint to
-configure. Normal searches require outbound internet access.
+</details>
 
-Published images currently target `linux/amd64`. ARM machines require Docker's
-amd64 emulation and `--platform=linux/amd64`. The image uses only the `latest`
-tag. To update, pull the image again and restart the MCP connection.
-
-See [Docker](docs/docker.md) for local builds, verification, image size, and
-publishing instructions. Public images can be pulled without a GHCR login.
-
-## Setup from source
-
-Requires Node.js 22 or newer and npm.
+<details>
+<summary>Hermes Agent</summary>
 
 ```bash
-git clone https://github.com/Harsh-2002/OLX-MCP.git
-cd OLX-MCP
-npm ci
-npx playwright install chromium
-npm run build
+hermes mcp add olx --command docker --connect-timeout 60 --args run --rm -i --shm-size=256m ghcr.io/harsh-2002/olx-mcp:latest
+hermes chat
 ```
 
-On Linux, use `npx playwright install --with-deps chromium` if browser system
-libraries are missing.
+Select the discovered capabilities when prompted. In an existing session,
+use `/reload-mcp` instead of restarting.
 
-Add this to your MCP client configuration, using your checkout's absolute path:
+</details>
 
-```json
-{
-  "mcpServers": {
-    "olx-mcp": {
-      "command": "node",
-      "args": ["/absolute/path/to/OLX-MCP/dist/index.js"]
-    }
-  }
-}
-```
-
-Restart the client after updating the configuration.
-
-## Tools
-
-### `searchListings`
-
-Requires `domain` and at least one of `query`, `category`, or `location`.
-Optional filters include `minPrice`, `maxPrice`, `page`, `limit`, and `sortBy`.
-
-```json
-{
-  "domain": "olx.in",
-  "query": "mini pc",
-  "location": "Mumbai",
-  "maxPrice": 15000,
-  "limit": 10
-}
-```
-
-Domains: `olx.pt`, `olx.pl`, `olx.bg`, `olx.ro`, `olx.ua`, `olx.in`,
-`olx.co.id`, `olx.kz`, and `olx.uz`.
-
-Filters vary by country. Indonesia supports query, canonical location, limit, and up to ten
-load-more batches; category, price, and custom sort filters return an explicit
-unsupported-filter error.
-
-India also supports up to ten load-more batches. For locations, use a supported city name such as Mumbai or Bengaluru, or an explicit
-OLX route such as `mumbai_g4058997` or a numeric route returned by `searchLocations`.
-
-### `searchLocations`
-
-Look up live OLX location suggestions in India, Indonesia, Kazakhstan,
-and Uzbekistan. Requires `domain` and `query`; accepts `parentId` when OLX exposes
-parent metadata and an integer `limit` from 1 to 50 (default 20).
-
-```json
-{
-  "domain": "olx.in",
-  "query": "Aluva",
-  "limit": 5
-}
-```
-
-Pass a returned location's `searchValue` unchanged to `searchListings.location`.
-Existing India aliases such as Mumbai still work; additional friendly names are
-resolved live. Ambiguous names require a canonical value from this tool.
-
-Lookup needs network access. Successful results are cached for ten minutes;
-failed refreshes do not serve expired data. OLX may restrict automated access,
-and sampled checks do not establish coverage of every locality.
-
-### `getListingDetails`
-
-Use a listing ID from a search on the same domain and running server.
-
-```json
-{
-  "domain": "olx.in",
-  "listingId": "1234567890",
-  "includeImages": true,
-  "includeSellerInfo": true
-}
-```
-
-Both optional flags default to `true`. Seller information includes the name and
-verification marker when available.
-
-OLX markup changes and anti-bot checks can affect results. Prices remain
-localized strings; some fields may be unavailable.
-
-### `getListingImages`
-
-Return actual listing photos to MCP clients with vision or image-display support.
-Requires `domain` and a `listingId` from a search on the same running connection.
-`limit` defaults to 1 and accepts 1–3 photos.
-
-```json
-{
-  "domain": "olx.in",
-  "listingId": "1234567890",
-  "limit": 2
-}
-```
-
-The response contains native MCP image blocks and text metadata with the listing
-link, photo source URLs, MIME types, byte sizes and any partial-download warnings.
-JPEG, PNG, WebP and GIF are supported, up to 2 MiB per photo. Photos are downloaded
-from public OLX hosts with a 15-second deadline per download and are not stored by
-the server. `getListingDetails.images` continues to return URLs only.
-
-Vision analysis runs in the connected client/model. Clients can display the image
-blocks or use source URLs for sharing; attachment delivery depends on the client.
-For example: "Find laptops in Aluva, show two photos of the first result, and
-inspect the visible condition." The server does not contact sellers or send
-messages. Photos may be unavailable, blocked or too large; those outcomes are
-reported explicitly.
-
-## Development
+<details>
+<summary>OpenClaw</summary>
 
 ```bash
-npm run dev
-npm test
-npm run ci
+openclaw mcp add olx --command docker --arg run --arg=--rm --arg=-i --arg=--shm-size=256m --arg ghcr.io/harsh-2002/olx-mcp:latest
+openclaw mcp doctor olx --probe
 ```
 
-`npm run ci` checks linting, formatting, types, test coverage, and the build.
-For live website checks, install Chromium and run `npm run test:integration`.
+OpenClaw's selected runtime must support MCP 2026-07-28. Check the probe before
+using the connection; see [client compatibility](docs/integrations.md#openclaw).
 
-- [Contributing](CONTRIBUTING.md)
-- [Architecture](docs/architecture.md)
-- [Testing](tests/README.md)
+</details>
 
-## License
+For Cursor, VS Code, desktop clients, and configuration alternatives, see
+[client integrations](docs/integrations.md).
 
-[MIT](LICENSE).
+Then ask your assistant:
 
-Measured performance results and repeatable comparisons are documented in
-[Benchmarks](docs/benchmarks.md).
+> Find laptops in Mumbai under INR 25,000 and show two photos of the first result.
+
+To update, pull `latest` again and restart the MCP connection.
+
+## More information
+
+[Usage](docs/tools.md) · [Countries](docs/countries.md) · [Docker](docs/docker.md) ·
+[Contributing](CONTRIBUTING.md) · [Architecture](docs/architecture.md) ·
+[Testing](tests/README.md) · [Benchmarks](docs/benchmarks.md)
+
+[MIT license](LICENSE).
