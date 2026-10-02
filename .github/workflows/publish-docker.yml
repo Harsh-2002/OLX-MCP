@@ -1,0 +1,65 @@
+name: Publish Docker image
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publish-docker
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    env:
+      IMAGE: ghcr.io/harsh-2002/olx-mcp
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run ci
+      - name: Build runtime image
+        run: |
+          docker build --platform=linux/amd64 \
+            --label "org.opencontainers.image.revision=$GITHUB_SHA" \
+            --tag olx-mcp:publish .
+      - name: Verify Chromium and MCP before publishing
+        run: npm run test:docker -- olx-mcp:publish
+      - name: Log in to GHCR
+        env:
+          REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: printf '%s' "$REGISTRY_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
+      - name: Push the verified image
+        run: |
+          docker tag olx-mcp:publish "$IMAGE:sha-$GITHUB_SHA"
+          docker tag olx-mcp:publish "$IMAGE:latest"
+          docker push "$IMAGE:sha-$GITHUB_SHA"
+          docker push "$IMAGE:latest"
+      - name: Pull and verify the published digest
+        run: |
+          docker pull "$IMAGE:sha-$GITHUB_SHA"
+          published_digest=$(docker image inspect "$IMAGE:sha-$GITHUB_SHA" --format '{{index .RepoDigests 0}}')
+          test -n "$published_digest"
+          test "$(docker image inspect olx-mcp:publish --format '{{.Id}}')" = \
+            "$(docker image inspect "$published_digest" --format '{{.Id}}')"
+          npm run test:docker -- "$published_digest"
+          {
+            echo "Published image: $IMAGE:latest"
+            echo "Source tag: $IMAGE:sha-$GITHUB_SHA"
+            echo "Digest: $published_digest"
+            echo "Platform: linux/amd64"
+            echo "Offline Chromium and MCP checks passed before and after publication."
+            echo "For the first publication, set package visibility to Public and verify anonymous pulls."
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Log out of GHCR
+        if: always()
+        run: docker logout ghcr.io

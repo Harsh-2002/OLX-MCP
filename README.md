@@ -10,7 +10,51 @@ Clients must support modern `server/discover` and per-request metadata. The
 TypeScript implementation uses SDK v2; updating a client dependency alone may
 also require enabling modern protocol negotiation. See [protocol requirements](docs/mcp-protocol.md).
 
-## Setup
+## Quick start with Docker
+
+The recommended installation is the GHCR image. It includes Node.js, Chromium,
+and the required system libraries; only Docker is needed on your machine.
+
+```bash
+docker pull ghcr.io/harsh-2002/olx-mcp:latest
+```
+
+Add this to your MCP client's configuration:
+
+```json
+{
+  "mcpServers": {
+    "olx-mcp": {
+      "command": "docker",
+      "args": [
+        "run",
+        "--rm",
+        "-i",
+        "--shm-size=256m",
+        "--read-only",
+        "--tmpfs",
+        "/tmp:rw,nosuid,size=256m",
+        "ghcr.io/harsh-2002/olx-mcp:latest"
+      ]
+    }
+  }
+}
+```
+
+Restart the client after updating its configuration. The client starts the
+container and owns its lifetime. The image serves MCP over stdin/stdout and
+requires a client that supports MCP 2026-07-28. There is no HTTP endpoint to
+configure. Normal searches require outbound internet access.
+
+Published images currently target `linux/amd64`. ARM machines require Docker's
+amd64 emulation and `--platform=linux/amd64`. Use a `sha-<full-commit>` tag or image
+digest to pin a tested build; `latest` follows the most recent published build.
+To update, pull the image again and restart the MCP connection.
+
+See [Docker](docs/docker.md) for local builds, verification, image size, and
+publishing instructions. Public images can be pulled without a GHCR login.
+
+## Setup from source
 
 Requires Node.js 22 or newer and npm.
 
@@ -39,16 +83,6 @@ Add this to your MCP client configuration, using your checkout's absolute path:
 ```
 
 Restart the client after updating the configuration.
-
-## Docker
-
-```bash
-docker build -t olx-mcp:local .
-docker run --rm -i olx-mcp:local
-```
-
-The image includes Chromium and runs the stdio MCP server. See
-[Docker](docs/docker.md) for client configuration and image checks.
 
 ## Tools
 

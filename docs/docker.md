@@ -1,6 +1,19 @@
 # Docker
 
-## Build
+## Pull the published image
+
+```bash
+docker pull ghcr.io/harsh-2002/olx-mcp:latest
+docker run --rm ghcr.io/harsh-2002/olx-mcp:latest --version
+```
+
+The public image includes Chromium and its system libraries. Published images
+currently support `linux/amd64`; ARM hosts need amd64 emulation and
+`--platform=linux/amd64`. `latest` selects the most recent manually published
+build. A `sha-<full-commit>` tag identifies its source commit; pin the registry
+image digest to select an exact build.
+
+## Build locally
 
 ```bash
 docker build -t olx-mcp:local .
@@ -28,7 +41,7 @@ This image serves MCP 2026-07-28 over standard input/output. Older protocol
 clients are rejected. Run it with stdin attached:
 
 ```bash
-docker run --rm -i --shm-size=256m olx-mcp:local
+docker run --rm -i --shm-size=256m ghcr.io/harsh-2002/olx-mcp:latest
 ```
 
 Do not allocate a TTY for an MCP connection. There is no HTTP endpoint or port
@@ -41,7 +54,16 @@ MCP client configuration:
   "mcpServers": {
     "olx-mcp": {
       "command": "docker",
-      "args": ["run", "--rm", "-i", "--shm-size=256m", "olx-mcp:local"]
+      "args": [
+        "run",
+        "--rm",
+        "-i",
+        "--shm-size=256m",
+        "--read-only",
+        "--tmpfs",
+        "/tmp:rw,nosuid,size=256m",
+        "ghcr.io/harsh-2002/olx-mcp:latest"
+      ]
     }
   }
 }
@@ -53,7 +75,7 @@ are in memory, so use search and details within the same connection.
 For a read-only container, add a writable temporary filesystem:
 
 ```bash
-docker run --rm -i --read-only --tmpfs /tmp:rw,nosuid,size=256m olx-mcp:local
+docker run --rm -i --shm-size=256m --read-only --tmpfs /tmp:rw,nosuid,size=256m ghcr.io/harsh-2002/olx-mcp:latest
 ```
 
 Normal scraping requires outbound network access. No host directories or Docker
@@ -80,7 +102,12 @@ To check a different local image:
 npm run test:docker -- olx-mcp:custom
 ```
 
-CI builds the image and runs these checks without publishing it.
+CI builds the image and runs these checks without publishing it. To verify the
+published image instead, run:
+
+```bash
+npm run test:docker -- ghcr.io/harsh-2002/olx-mcp:latest
+```
 
 ## Updating the base image
 
@@ -143,3 +170,35 @@ The resource measurement defaults to ten pairs after a warmup, with alternating
 order and equal page lifecycle timing. Pass a third argument to change the pair
 count. See [benchmarks](benchmarks.md) for previous/current image comparisons, raw
 samples and the limits of the timing claims.
+
+## Publishing to GHCR
+
+Run the **Publish Docker image** workflow from the repository's Actions tab,
+selecting `main`. Publishing is manual and does not create an npm package, Git
+tag, or GitHub release. The workflow runs `npm run ci`, builds the runtime image,
+and runs offline real-Chromium/MCP checks before logging into GHCR with the
+repository's `GITHUB_TOKEN`. It pushes the tested image under `latest` and
+`sha-<full-commit>`, then pulls the published digest and runs the Docker checks
+again. The run summary records the digest and source revision.
+
+On the first publication, GitHub creates the package with private visibility.
+Open [the package settings](https://github.com/users/Harsh-2002/packages/container/olx-mcp/settings)
+and change its visibility to **Public** so users can pull it without credentials.
+The image's source label and workflow associate it with this repository.
+
+Verify anonymous access with an empty Docker configuration:
+
+```bash
+image_config=$(mktemp -d)
+docker --config "$image_config" pull ghcr.io/harsh-2002/olx-mcp:latest
+rm -rf "$image_config"
+```
+
+For live OLX checks against the published image:
+
+```bash
+npm run test:live:mcp -- --image=ghcr.io/harsh-2002/olx-mcp:latest --images
+```
+
+Live checks depend on OLX availability and are reported separately from the
+offline checks in the publishing workflow.

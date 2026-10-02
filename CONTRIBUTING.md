@@ -40,23 +40,22 @@ with a fresh browser installation. Never include credentials or private seller d
 Website selectors are external dependencies. A mocked test passing is not evidence
 that the selector still matches the live site. Describe any live check separately.
 
-## Releases
+## Docker publishing
 
-The package name is `@harsh-2002/olx-mcp`, and the executable remains
-`olx-mcp`. Releases require publish access to that npm scope and an `NPM_TOKEN`
-repository secret. Setting up those credentials is a maintainer responsibility.
+Docker images are distributed through `ghcr.io/harsh-2002/olx-mcp`. npm publishing
+is not part of the current distribution workflow.
 
-Before releasing:
+Maintainers run the **Publish Docker image** workflow manually from `main` after
+reviewing the changes. It runs full CI, builds a `linux/amd64` image, and tests
+real Chromium and MCP behavior before pushing that exact image to GHCR. It uses
+the repository's `GITHUB_TOKEN` with `packages: write`; no npm or registry token
+secret is needed. No Git tag or GitHub release is created.
 
-1. Run `npm ci` and `npm run ci`.
-2. Review `npm pack --dry-run` for the intended package contents.
-3. Check that README setup instructions and documented limitations are current.
-4. Update the version with `npm version patch`, `minor`, or `major` as appropriate.
-5. Push the version commit and matching `v*` tag once the release is approved.
-
-The tag workflow validates the full project, packs it, checks the packaged
-executable, publishes that archive, and creates a GitHub release. Do not publish
-locally in parallel with the workflow. Tag and package versions must match.
+Each successful publication updates `latest` and adds `sha-<full-commit>` for
+source identification. Pin an image digest when exact build reproducibility is
+required. Package visibility must be **Public** for anonymous pulls. See
+[Docker publishing](docs/docker.md#publishing-to-ghcr) for the first-publication
+steps and verification commands.
 
 CI on `main` and pull requests runs the full validation suite on Node.js 22 and 24.
 Live website tests remain opt-in because they depend on external sites.
