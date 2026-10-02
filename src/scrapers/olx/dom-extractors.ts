@@ -71,7 +71,14 @@ export const extractLocationText = (container: Element): string => {
  */
 export const extractGalleryImages = (images: Element[]): string[] => {
   const urls = images
-    .map(image => image.getAttribute('src') || image.getAttribute('data-src') || '')
+    .map(
+      image =>
+        [
+          (image as Element & { currentSrc?: string }).currentSrc,
+          image.getAttribute('src'),
+          image.getAttribute('data-src'),
+        ].find(url => url?.startsWith('https://') || url?.startsWith('http://')) || ''
+    )
     .filter(url => url.startsWith('http://') || url.startsWith('https://'));
 
   // The thumbnail strip repeats the slides it scrolls through.

@@ -106,6 +106,8 @@ export const withTimeout = <T>(promise: Promise<T>, ms: number): Promise<T> =>
 
 // Mock browser utilities
 export interface MockPage {
+  waitForFunction: MockedFunction<Page['waitForFunction']>;
+  route: MockedFunction<Page['route']>;
   goto: MockedFunction<Page['goto']>;
   title: MockedFunction<Page['title']>;
   $: MockedFunction<Page['$']>;
@@ -145,6 +147,8 @@ export const createMockElementHandle = (
 
 export const createMockPage = (overrides: Partial<MockPage> = {}): MockPage =>
   ({
+    route: vi.fn().mockResolvedValue(undefined),
+    waitForFunction: vi.fn().mockResolvedValue(undefined),
     getByRole: vi.fn().mockReturnValue({
       count: vi.fn().mockResolvedValue(0),
       isVisible: vi.fn().mockResolvedValue(false),

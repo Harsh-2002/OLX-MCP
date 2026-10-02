@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import { OLX_DOMAINS } from './domains.js';
 
 export type Result<T, E = Error> = { success: true; data: T } | { success: false; error: E };
@@ -15,6 +16,7 @@ export interface MCPTool<TArgs = unknown, TResult = unknown> {
   readonly description: string;
   readonly inputSchema: z.ZodSchema<TArgs>;
   execute(args: TArgs, signal?: AbortSignal): Promise<Result<TResult>>;
+  toMcpResult?(data: TResult): CallToolResult;
 }
 
 export interface ScraperConfig {

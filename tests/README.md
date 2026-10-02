@@ -68,7 +68,7 @@ npm run test:integration -- olx.in
 Install Chromium first. Live failures can result from unavailable sites, stale
 selectors, empty searches, changed listing availability, or anti-bot checks.
 The script exits unsuccessfully when a checked operation fails. It does not run
-in CI and does not establish that all six sites work.
+in CI and does not establish that all configured sites work.
 
 Report live checks separately from mocked test results. Do not record real seller
 contact details, credentials, or private browsing data in test fixtures.
@@ -80,7 +80,7 @@ Build the image with `docker build -t olx-mcp:local .`, then run
 container's stdio MCP server with network access disabled. An offline SSR fixture
 also verifies that frontend scripts cannot remove European or Central Asian search
 cards before extraction, and that Polish details preserve the title without action-button text. These checks are separate
-from the mocked suite and live OLX checks. See [Docker](../docs/docker.md).
+from the mocked suite and live OLX checks. Native MCP image bytes are also verified against an offline photo fixture. See [Docker](../docs/docker.md).
 
 ## MCP live verification
 
@@ -98,3 +98,8 @@ Mocked location-provider tests exercise canonical-value handling, HTTP/2 failure
 lifecycle; they do not establish that the live picker matches those selectors.
 Registry timing checks measure registry operations, with assertion work outside
 the measured interval.
+
+Use `--images` with `test:live:mcp` to check actual photo bytes and source metadata
+for every sampled country listing. Downloader unit tests cover URL/DNS validation,
+redirects, byte limits, file signatures, timeouts and cancellation. Page-admission
+tests cover queue bounds, FIFO release, cancellation and cleanup failures.

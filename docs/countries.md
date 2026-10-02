@@ -72,7 +72,8 @@ npm run test:live:mcp -- --image=olx-mcp:local olx.kz olx.uz
 
 The default matrix covers all nine countries through a real MCP client. It checks
 location lookup where implemented, search with the returned value, listing
-details and a second page where available. India also checks countrywide
+details and a second page where available. Add `--images` to verify native MCP
+photo delivery for the sampled listings. India also checks countrywide
 pagination and the Mumbai alias. Listing details and pagination are checked
 independently so a detail failure does not hide pagination status. Failed lookup
 also triggers countrywide search to distinguish lookup from listing failures.
@@ -110,6 +111,30 @@ These checks sample particular queries, cities and listings. They do not establi
 exhaustive support for every category, filter or locality. Complete India coverage
 remains unestablished. HTTP errors, blocked pages, TLS failures and absent recognized
 result markers are failures, never successful empty searches.
+
+## Photo delivery verification
+
+On 2026-10-02, the Docker MCP client received actual photo blocks for sampled
+listings in all nine countries. Each result included a supported MIME type,
+nonempty decoded bytes within the 2 MiB limit, and a corresponding source URL.
+India and Indonesia gallery readiness and Indonesia's direct image-node selector
+were verified after correcting initial missing-photo failures. The final matrix
+passed photo delivery on eight sites; Portugal returned a missing-title selector
+error on the second detail-page request after its first detail request succeeded.
+A separate Portugal recheck passed search, details, pagination and native photo
+delivery. This intermittent page response
+remains an upstream availability limitation.
+
+Hermes's native MCP bridge also received a listing photo and created a local
+attachment. A real Hermes `vision_analyze` call correctly described the visible
+desktop setup. This verifies image reception and a vision path; delivery to each
+messaging platform still depends on that client's attachment support. No message
+to a seller or external recipient was sent as part of verification.
+
+A listing may have no exposed photos, a CDN request may fail, or a photo may exceed
+the download cap. Responsive sources are preferred when the browser exposes them;
+returned resolution still depends on OLX. These sampled checks do not guarantee
+photos for every listing or support for every client/model's image formats.
 
 ## Primary references
 

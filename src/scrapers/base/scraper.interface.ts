@@ -1,4 +1,10 @@
 import { Browser, Page } from 'playwright';
+import {
+  withBrowserPage,
+  waitForRetry,
+  OperationCancelledError,
+  BrowserBusyError,
+} from '../../core/browser-pages.js';
 import { Result, ScraperConfig } from '../../core/types.js';
 
 export interface IScraper<TQuery, TResult> {
@@ -36,38 +42,43 @@ export abstract class PlaywrightScraper<TQuery, TResult> implements IScraper<TQu
     if (this.config.userAgent) {
       newPageOptions.userAgent = this.config.userAgent;
     }
-    const page = await this.browser.newPage(newPageOptions);
-
-    try {
-      if (signal?.aborted) {
-        throw new Error('Operation cancelled');
-      }
-
-      page.setDefaultTimeout(this.config.timeout);
-      return await fn(page);
-    } finally {
-      await page.close();
-    }
+    return withBrowserPage(
+      this.browser,
+      newPageOptions,
+      async page => {
+        page.setDefaultTimeout(this.config.timeout);
+        return fn(page);
+      },
+      signal
+    );
   }
 
   protected async retryOperation<T>(
     operation: () => Promise<T>,
-    maxRetries: number = this.config.retries
+    maxRetries: number = this.config.retries,
+    signal?: AbortSignal
   ): Promise<T> {
     let lastError: Error;
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      if (signal?.aborted) throw new OperationCancelledError();
       try {
         return await operation();
       } catch (error) {
         lastError = error instanceof Error ? error : new Error(String(error));
 
-        if (lastError instanceof NonRetryableError || attempt === maxRetries) {
+        if (signal?.aborted) throw new OperationCancelledError();
+        if (
+          lastError instanceof NonRetryableError ||
+          lastError instanceof OperationCancelledError ||
+          lastError instanceof BrowserBusyError ||
+          attempt === maxRetries
+        ) {
           throw lastError;
         }
 
         const delay = Math.min(1000 * Math.pow(2, attempt - 1), 10000);
-        await new Promise(resolve => setTimeout(resolve, delay));
+        await waitForRetry(delay, signal);
       }
     }
 

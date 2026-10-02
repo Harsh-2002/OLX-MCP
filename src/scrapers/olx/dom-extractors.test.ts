@@ -187,6 +187,23 @@ describe('extractGalleryImages', () => {
     expect(extractGalleryImages(images)).toEqual(['https://cdn.olx.pl/lazy.jpg']);
   });
 
+  it('prefers the browser-selected responsive photo over a small fallback', () => {
+    const responsive = image({ src: 'https://cdn.olx.pl/small.jpg' });
+    Object.assign(responsive, { currentSrc: 'https://cdn.olx.pl/large.jpg' });
+    expect(extractGalleryImages([responsive])).toEqual(['https://cdn.olx.pl/large.jpg']);
+  });
+
+  it('uses a lazy photo URL when src is an inline placeholder', () => {
+    expect(
+      extractGalleryImages([
+        image({
+          src: 'data:image/gif;base64,placeholder',
+          'data-src': 'https://cdn.olx.pl/lazy.jpg',
+        }),
+      ])
+    ).toEqual(['https://cdn.olx.pl/lazy.jpg']);
+  });
+
   it('deduplicates the thumbnail strip repeating the main image', () => {
     const images = [
       image({ src: 'https://cdn.olx.pl/a.jpg' }),

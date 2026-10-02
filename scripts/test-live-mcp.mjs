@@ -7,6 +7,7 @@ const imageOption = process.argv.slice(2).find(arg => arg.startsWith('--image=')
 const requested = process.argv.slice(2).filter(arg => !arg.startsWith('--'));
 const domains = requested.length ? requested : [...OLX_DOMAINS];
 for (const domain of domains) assert(OLX_DOMAINS.includes(domain), `Unsupported domain: ${domain}`);
+const checkImages = process.argv.includes('--images');
 const image = imageOption?.slice('--image='.length);
 const client = new Client({ name: 'olx-live-verification', version: '1.0.0' });
 const transport = new StdioClientTransport({
@@ -57,6 +58,7 @@ try {
   const discovered = await client.listTools();
   assert.deepEqual(discovered.tools.map(tool => tool.name).sort(), [
     'getListingDetails',
+    'getListingImages',
     'searchListings',
     'searchLocations',
   ]);
@@ -100,6 +102,40 @@ try {
         assert(details.price, 'Details have no displayed price');
         assert.equal(details.id, result.listings[0].id);
         report.details = 'passed';
+        if (checkImages) {
+          try {
+            const photos = await client.callTool(
+              {
+                name: 'getListingImages',
+                arguments: { domain, listingId: result.listings[0].id, limit: 1 },
+              },
+              undefined,
+              { timeout: 120000 }
+            );
+            assert(!photos.isError, 'Photo tool returned an error');
+            const imageBlocks = photos.content.filter(block => block.type === 'image');
+            assert.equal(imageBlocks.length, 1, 'Expected one native MCP image block');
+            assert(
+              ['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(
+                imageBlocks[0].mimeType
+              )
+            );
+            const bytes = Buffer.from(imageBlocks[0].data, 'base64');
+            assert(bytes.length > 0 && bytes.length <= 2 * 1024 * 1024);
+            const metadata = JSON.parse(photos.content.find(block => block.type === 'text').text);
+            assert.equal(metadata.images[0].byteLength, bytes.length);
+            assert.equal(metadata.listingId, result.listings[0].id);
+            assert(metadata.images[0].url.startsWith('https://'));
+            report.images = {
+              status: 'passed',
+              mimeType: imageBlocks[0].mimeType,
+              byteLength: bytes.length,
+            };
+          } catch (error) {
+            report.images = { status: 'failed', error: error.message };
+            report.failure = error.message;
+          }
+        }
       } catch (error) {
         report.details = error.message;
         report.failure = error.message;

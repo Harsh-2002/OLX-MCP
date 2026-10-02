@@ -1,4 +1,5 @@
 import type { Browser, Page, Response } from 'playwright';
+import { withBrowserPage } from '../core/browser-pages.js';
 import { OLX_BROWSER_USER_AGENT } from '../core/browser-profile.js';
 import type { LocationDomain } from '../core/domains.js';
 import { getDomainConfig } from '../scrapers/olx/domain-config.js';
@@ -21,7 +22,12 @@ export class BrowserLocationProvider implements LocationProvider {
   constructor(private readonly browser: Browser) {}
 
   async lookup(query: LocationQuery): Promise<LocationMatch[]> {
-    const page = await this.browser.newPage({ userAgent: OLX_BROWSER_USER_AGENT });
+    return withBrowserPage(this.browser, { userAgent: OLX_BROWSER_USER_AGENT }, page =>
+      this.lookupOnPage(page, query)
+    );
+  }
+
+  private async lookupOnPage(page: Page, query: LocationQuery): Promise<LocationMatch[]> {
     page.setDefaultTimeout(10000);
     const deadline = setTimeout(() => {
       void page.close().catch(() => {});
@@ -108,7 +114,6 @@ export class BrowserLocationProvider implements LocationProvider {
       );
     } finally {
       clearTimeout(deadline);
-      await page.close().catch(() => {});
     }
   }
 

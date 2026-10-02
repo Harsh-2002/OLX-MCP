@@ -236,6 +236,10 @@ export const OLX_DOMAIN_CONFIGS: Record<OlxDomain, DomainConfig> = {
     language: 'id',
     selectors: {
       ...INDIA_SELECTORS,
+      detail: {
+        ...INDIA_SELECTORS.detail,
+        images: 'img[data-aut-id="defaultImg"], [data-aut-id="defaultImg"] img',
+      },
       search: {
         ...INDIA_SELECTORS.search,
         emptyState: '[data-aut-id="emptyResults"], [data-aut-id="noResults"]',

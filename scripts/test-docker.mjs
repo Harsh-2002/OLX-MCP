@@ -59,8 +59,40 @@ const browserCheck = spawnSync(
         const polishResult = await polishScraper.getListingDetails(polishSearch.data.listings[0].id);
         assert.equal(polishResult.success, true, 'Polish SSR details must survive frontend scripts');
         assert.equal(polishResult.data.title, 'Polish fixture title', 'Action button text must not enter the title');
+        // Exercise native image delivery over the actual SDK transport without external downloads.
+        const { OLXMCPServer } = await import('./dist/core/server.js');
+        const { GetListingImagesTool } = await import('./dist/tools/listing/get-listing-images.tool.js');
+        const { Client: PhotoClient } = await import('@modelcontextprotocol/sdk/client/index.js');
+        const { InMemoryTransport } = await import('@modelcontextprotocol/sdk/inMemory.js');
+        const photo = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a2ioAAAAASUVORK5CYII=', 'base64');
+        const fixturePhoto = { url: 'https://apollo.olx.in/fixture.png', mimeType: 'image/png', data: photo.toString('base64'), byteLength: photo.length };
+        const photoTool = new GetListingImagesTool({ getScraper: () => ({ getListingDetails: async () => ({ success: true, data: { id: 'fixture', title: 'Photo fixture', url: 'https://www.olx.in/item/fixture', images: [fixturePhoto.url] } }) }) }, { download: async () => fixturePhoto });
+        const photoServer = new OLXMCPServer({ name: 'photo-fixture', version: '1' });
+        photoServer.registry.register(photoTool);
+        const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+        const photoClient = new PhotoClient({ name: 'photo-check', version: '1' });
+        try {
+          await photoServer.connect(serverTransport);
+          await photoClient.connect(clientTransport);
+          const result = await photoClient.callTool({ name: 'getListingImages', arguments: { domain: 'olx.in', listingId: 'fixture' } });
+          assert.equal(result.content[1].type, 'image');
+          assert.equal(result.content[1].mimeType, 'image/png');
+          assert.deepEqual(Buffer.from(result.content[1].data, 'base64'), photo);
+          const metadata = JSON.parse(result.content[0].text);
+          assert.equal(metadata.images[0].url, fixturePhoto.url);
+          assert.equal(metadata.images[0].byteLength, photo.length);
+          assert.equal(metadata.images[0].data, undefined, 'Base64 must not be duplicated in text');
+        } finally {
+          await photoClient.close();
+          await photoServer.getServer().close();
+        }
         await page.setContent(fixture);
         assert.equal(await page.locator('[data-cy="l-card"]').count(), 0, 'Fixture must reproduce card loss when JavaScript is enabled');
+        const { getDomainConfig } = await import('./dist/scrapers/olx/domain-config.js');
+        const { extractGalleryImages } = await import('./dist/scrapers/olx/dom-extractors.js');
+        await page.setContent('<img src="https://statics.olx.co.id/logo.png"><img data-aut-id="defaultImg" src="https://apollo.olx.co.id/photo.jpg"><div data-aut-id="defaultImg"><img src="data:image/gif;base64,placeholder" data-src="https://apollo.olx.co.id/lazy.jpg"></div>', { waitUntil: 'domcontentloaded' });
+        const indonesiaPhotos = await page.$$eval(getDomainConfig('olx.co.id').selectors.detail.images, extractGalleryImages);
+        assert.deepEqual(indonesiaPhotos, ['https://apollo.olx.co.id/photo.jpg', 'https://apollo.olx.co.id/lazy.jpg'], 'Gallery selection must exclude logos and preserve lazy photo URLs');
         await page.setContent('<title>OLX MCP container check</title>');
         assert.equal(await page.title(), 'OLX MCP container check');
       } finally {
@@ -91,6 +123,7 @@ try {
   const { tools } = await client.listTools();
   assert.deepEqual(tools.map(tool => tool.name).sort(), [
     'getListingDetails',
+    'getListingImages',
     'searchListings',
     'searchLocations',
   ]);
@@ -98,7 +131,12 @@ try {
     client.callTool({ name: 'searchListings', arguments: { domain: 'invalid', query: 'test' } }),
     /Validation error/
   );
-  for (const name of ['searchListings', 'searchLocations', 'getListingDetails']) {
+  for (const name of [
+    'searchListings',
+    'searchLocations',
+    'getListingDetails',
+    'getListingImages',
+  ]) {
     await assert.rejects(
       client.callTool({
         name,

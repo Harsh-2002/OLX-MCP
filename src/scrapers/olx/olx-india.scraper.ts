@@ -32,8 +32,4 @@ export class OLXIndiaScraper extends LoadMoreOlxScraper {
   protected override getDirectListingUrl(listingId: ListingId): string {
     return `${this.domainConfig.baseUrl}/item/${encodeURIComponent(listingId)}`;
   }
-
-  protected override shouldWaitForImages(): boolean {
-    return true;
-  }
 }

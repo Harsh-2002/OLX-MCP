@@ -51,7 +51,11 @@ export abstract class BaseOlxScraper extends PlaywrightScraper<SearchFilters, Se
 
   async scrape(filters: SearchFilters, signal?: AbortSignal): Promise<Result<SearchResult>> {
     try {
-      const result = await this.retryOperation(() => this.performSearch(filters, signal));
+      const result = await this.retryOperation(
+        () => this.performSearch(filters, signal),
+        undefined,
+        signal
+      );
       return createResult(result);
     } catch (error) {
       return createError(error instanceof Error ? error : new Error(String(error)));
@@ -179,7 +183,9 @@ export abstract class BaseOlxScraper extends PlaywrightScraper<SearchFilters, Se
     // Racing this against an empty-state selector left the losing wait pending
     // and rejecting unobserved. Cards never appearing is not an error here —
     // extractListings is what distinguishes an empty page from a broken one.
-    await page.waitForSelector(this.getSearchReadySelector(), { timeout: 10000 }).catch(() => {});
+    const empty = this.domainConfig.selectors.search.emptyState;
+    const ready = `${this.getSearchReadySelector()}${empty ? `, ${empty}` : ''}`;
+    await page.waitForSelector(ready, { timeout: 10000, state: 'attached' }).catch(() => {});
   }
 
   protected async extractListings(
@@ -345,8 +351,10 @@ export abstract class BaseOlxScraper extends PlaywrightScraper<SearchFilters, Se
     try {
       // options is captured by this closure, so every retry attempt re-applies
       // the same skip/include decisions.
-      const result = await this.retryOperation(() =>
-        this.performGetListingDetails(listingId, signal, options)
+      const result = await this.retryOperation(
+        () => this.performGetListingDetails(listingId, signal, options),
+        undefined,
+        signal
       );
       return createResult(result);
     } catch (error) {
@@ -395,7 +403,18 @@ export abstract class BaseOlxScraper extends PlaywrightScraper<SearchFilters, Se
         const includeSellerInfo = options.includeSellerInfo ?? true;
 
         if (includeImages && this.shouldWaitForImages()) {
-          await page.waitForSelector(detail.images, { timeout: 10000 }).catch(() => {});
+          await page
+            .waitForFunction(
+              selector =>
+                Array.from(document.querySelectorAll(selector)).some(image =>
+                  ['src', 'data-src'].some(attribute =>
+                    /^https?:\/\//.test(image.getAttribute(attribute) ?? '')
+                  )
+                ),
+              detail.images,
+              { timeout: 10000 }
+            )
+            .catch(() => {});
         }
 
         const [title, price, description, location, images, seller] = await Promise.all([

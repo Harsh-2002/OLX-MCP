@@ -10,6 +10,10 @@ export class LoadMoreOlxScraper extends BaseOlxScraper {
     super(domain, browser);
   }
 
+  protected override shouldWaitForImages(): boolean {
+    return true;
+  }
+
   protected override buildSearchUrl(filters: SearchFilters): string {
     if ((filters.page ?? 1) > 10)
       throw new NonRetryableError('Load-more pagination is limited to 10 batches per call');

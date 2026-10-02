@@ -234,12 +234,13 @@ describe('OLXMCPServer', () => {
       return call![1];
     };
 
-    it('lists all three tools after initialization with their JSON schemas', async () => {
+    it('lists all four tools after initialization with their JSON schemas', async () => {
       await server.initialize();
       const result = await getHandler(ListToolsRequestSchema)();
       expect(result.tools.map((tool: any) => tool.name)).toEqual([
         'searchListings',
         'getListingDetails',
+        'getListingImages',
         'searchLocations',
       ]);
       expect(result.tools.every((tool: any) => tool.inputSchema.type === 'object')).toBe(true);
@@ -275,7 +276,34 @@ describe('OLXMCPServer', () => {
       const result = await getHandler(CallToolRequestSchema)({
         params: { name: 'searchListings', arguments: { domain: 'olx.in', query: 'test' } },
       });
-      expect(result.content).toEqual([{ type: 'text', text: JSON.stringify(data, null, 2) }]);
+      expect(result.content).toEqual([{ type: 'text', text: JSON.stringify(data) }]);
+    });
+
+    it('preserves native image blocks from a photo tool result', async () => {
+      await server.initialize();
+      const registry = (server as any).registry;
+      vi.spyOn(registry.get('getListingImages'), 'execute').mockResolvedValue({
+        success: true,
+        data: {
+          listingId: '123',
+          title: 'Fixture',
+          listingUrl: 'https://www.olx.in/item/123',
+          warnings: [],
+          images: [
+            {
+              url: 'https://apollo.olx.in/a.jpg',
+              data: '/9j/',
+              mimeType: 'image/jpeg',
+              byteLength: 3,
+            },
+          ],
+        },
+      });
+      const result = await getHandler(CallToolRequestSchema)({
+        params: { name: 'getListingImages', arguments: { domain: 'olx.in', listingId: '123' } },
+      });
+      expect(result.content[1]).toEqual({ type: 'image', data: '/9j/', mimeType: 'image/jpeg' });
+      expect(JSON.parse(result.content[0].text).images[0]).not.toHaveProperty('data');
     });
 
     it('surfaces scraper failures returned by a tool', async () => {

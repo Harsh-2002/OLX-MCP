@@ -69,7 +69,7 @@ npm run test:docker
 ```
 
 `test:docker` checks real Chromium startup, non-root execution, absence of source
-and development dependencies, the MCP handshake, tool discovery, and invalid
+and development dependencies, the MCP handshake, tool discovery, native image-block delivery with an offline fixture, and invalid
 argument handling. Its containers use a read-only filesystem and have networking
 disabled. It does not query live OLX pages.
 
@@ -102,6 +102,30 @@ requires an external display and additional desktop configuration.
 Full Chromium replaces the smaller headless-shell build because live India and
 Indonesia requests failed with the shell and succeeded with full Chromium.
 On linux/amd64, the full-Chromium image reports approximately 1.07 GB
-(1,073,728,676 bytes) through `docker image inspect`, compared with about
+(1,073,811,862 bytes) through `docker image inspect`, compared with about
 847 MB for the shell image. The increase is approximately 227 MB (27%).
 Docker local size is not a registry download size.
+
+## Performance and photo checks
+
+```bash
+npm run test:live:mcp -- --image=olx-mcp:local --images
+```
+
+`--images` additionally downloads one photo per sampled listing and checks native
+MCP image blocks, MIME type, source metadata and the byte cap. It retains only
+verification summaries. Browser concurrency is limited to four pages per server;
+image-download concurrency is limited to two. These limits apply within one
+process, not across independently launched containers.
+
+A controlled resource check runs without outbound networking:
+
+```bash
+node scripts/measure-resources.mjs olx-mcp:local
+```
+
+The 2026-10-02 fixture served two photos totaling 1,048,712 bytes before filtering.
+SSR filtering reduced photo requests from two to zero and downloaded photo bytes
+from 1,048,712 to zero, while preserving both source URLs. Timing is printed for
+diagnostics, but this small local fixture does not establish an overall live-site
+speedup. Country-specific navigation, hydration and upstream latency still apply.

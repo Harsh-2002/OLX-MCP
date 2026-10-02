@@ -5,6 +5,7 @@ import { chromium, Browser } from 'playwright';
 
 import { ToolRegistry } from './tool-registry.js';
 import { SearchListingsTool } from '../tools/search/search-listings.tool.js';
+import { GetListingImagesTool } from '../tools/listing/get-listing-images.tool.js';
 import { GetListingDetailsTool } from '../tools/listing/get-listing-details.tool.js';
 import { LocationService } from '../locations/location-service.js';
 import { OlxLocationProvider } from '../locations/native-location-provider.js';
@@ -68,6 +69,7 @@ export class OLXMCPServer {
     this.registry
       .register(new SearchListingsTool(this.scraperFactory, this.locationService))
       .register(new GetListingDetailsTool(this.scraperFactory))
+      .register(new GetListingImagesTool(this.scraperFactory))
       .register(new SearchLocationsTool(this.locationService));
   }
 
@@ -77,6 +79,12 @@ export class OLXMCPServer {
         name: tool.name,
         description: tool.description,
         inputSchema: zodToJsonSchema(tool.inputSchema),
+        annotations: {
+          readOnlyHint: true,
+          destructiveHint: false,
+          idempotentHint: true,
+          openWorldHint: true,
+        },
       })),
     }));
 
@@ -94,11 +102,13 @@ export class OLXMCPServer {
         throw new Error(result.error.message);
       }
 
+      if (tool.toMcpResult) return tool.toMcpResult(result.data);
+
       return {
         content: [
           {
             type: 'text' as const,
-            text: JSON.stringify(result.data, null, 2),
+            text: JSON.stringify(result.data),
           },
         ],
       };

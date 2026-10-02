@@ -27,9 +27,9 @@ MCP client
 ```
 
 `OLXMCPServer.initialize()` launches a shared browser, creates the scraper factory,
-and registers three tools before connecting the transport. Tool discovery converts
+and registers four tools before connecting the transport. Tool discovery converts
 Zod schemas to JSON Schema. Tool failures become thrown errors at the MCP handler;
-successes are serialized into one text content block.
+successes use JSON text, with native image blocks added by the photo tool.
 
 `src/index.ts` installs shutdown handlers and delegates cleanup to the server.
 The executable wrapper in `bin/` starts the compiled entry point and forwards signals.
@@ -65,7 +65,9 @@ assumption that needs live verification when site markup changes.
 India uses separate `data-aut-id` selectors, `/items/` search paths, canonical
 location identifiers, and `iid-` listing IDs. Its subclass waits for DOM content
 rather than network idle, accepts a summary element as a search-ready signal,
-uses a direct item URL for uncached detail requests, and waits for gallery images.
+uses a direct item URL for uncached detail requests. India and Indonesia wait for
+a valid gallery URL when images are requested; Indonesia binds its image selector
+to native `img[data-aut-id="defaultImg"]` nodes as well as gallery containers.
 
 Queries preserve non-ASCII letters and digits. Polish and Romanian folding tables
 normalize selected diacritics; other non-ASCII query slugs are percent-encoded.
@@ -84,9 +86,18 @@ The default page timeout is 30 seconds. Operations make up to three attempts,
 with exponential backoff between failures. `NonRetryableError` bypasses retry
 for detected stale selectors and missing detail-page titles.
 
-The MCP handler forwards request cancellation signals to tools. Abort checks exist
-at several boundaries. In-flight navigation and retry delays are not actively
-cancelled. There is no concurrency limiter or global operation deadline.
+All scrapers and browser location pickers share a four-page admission limit per
+browser. Up to 32 callers wait in FIFO order for at most 30 seconds; excess or
+expired requests fail with a capacity error without scraper retries. The slot is
+held through page creation and cleanup. Queued cancellation removes the caller;
+active cancellation closes its page, and retry backoff stops immediately.
+Shared location fetches continue for their remaining callers.
+
+Server-rendered pages skip image, font and media downloads while preserving
+scripts, styles, text and image URLs. Dynamic India/Indonesia pages and browser
+pickers retain their resources. Readiness accepts recognized empty-result markers
+as well as listing cards, avoiding a full card timeout on known-empty pages.
+There is no global operation deadline; navigation and tool-specific bounds remain.
 
 ## Search and detail data
 
@@ -145,3 +156,20 @@ names through the same service and refuses ambiguous matches.
 
 Only location metadata is cached, never listing contents or seller data.
 Coverage and live availability are documented in [Countries](countries.md).
+
+## Image delivery
+
+`getListingImages` resolves photos through the domain scraper, then downloads
+up to three gallery images (one by default). Two downloads may run concurrently,
+with a 16-entry queue and 30-second admission deadline. Each download has an
+absolute 15-second deadline, up to three redirects, and a 2 MiB byte cap.
+HTTPS OLX/OLX CDN hosts only are accepted. Every DNS answer is checked against
+non-public addresses and the selected address is pinned to the HTTPS connection;
+redirects repeat validation. File signatures select JPEG, PNG, WebP or GIF;
+HTML, SVG and unsupported formats fail. No image files or photo cache are written.
+
+The optional `MCPTool.toMcpResult` formatter emits native MCP image blocks and
+compact metadata without duplicating base64 inside text. Existing tools retain
+JSON text responses, now without pretty-print whitespace. All four tools advertise
+read-only annotations. Vision interpretation and attachment delivery belong to
+the connected client; source URLs accompany the image bytes for sharing.
