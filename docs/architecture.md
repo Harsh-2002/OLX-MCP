@@ -69,8 +69,9 @@ assumption that needs live verification when site markup changes.
 
 India uses separate `data-aut-id` selectors, `/items/` search paths, canonical
 location identifiers, and `iid-` listing IDs. Its subclass waits for DOM content
-rather than network idle, accepts a summary element as a search-ready signal,
-uses a direct item URL for uncached detail requests. India and Indonesia wait for
+rather than network idle and uses a direct item URL for uncached detail requests.
+Search waits up to ten seconds for listing cards: a populated count summary can
+appear before cards finish rendering and is not a readiness signal. India and Indonesia wait for
 a valid gallery URL when images are requested; Indonesia binds its image selector
 to native `img[data-aut-id="defaultImg"]` nodes as well as gallery containers.
 
@@ -190,3 +191,12 @@ as cacheable. Cancellation uses `ctx.mcpReq.signal`.
 
 [SDK migration guide](https://github.com/modelcontextprotocol/typescript-sdk/blob/main/docs/migration/support-2026-07-28.md)
 and [MCP 2026-07-28 specification](https://modelcontextprotocol.io/specification/2026-07-28).
+
+## Operational logging
+
+Each known tool invocation emits a JSON summary on stderr with tool name, a
+recognized domain when supplied, elapsed milliseconds, status and result count
+on success. Failures include a fixed error kind. Arguments, listing contents,
+URLs and image bytes are excluded from these summaries. MCP responses remain
+on stdout. Docker captures both streams, so documented run commands cap its
+retention at three 10 MB files per container.

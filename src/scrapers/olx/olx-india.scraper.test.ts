@@ -122,6 +122,52 @@ describe('OLXIndiaScraper', () => {
     ]);
   });
 
+  it('waits for delayed cards even when the result-count summary is already present', async () => {
+    const { mockPage } = setupOLXScrapingMocks();
+    let cardsReady = false;
+    mockPage.waitForSelector.mockImplementation(async (selector: string) => {
+      // The summary exists immediately; cards appear only when their selector is awaited.
+      if (!selector.includes('searchTextPage')) cardsReady = true;
+      return null;
+    });
+    mockPage.$eval.mockResolvedValue(4424);
+    mockPage.$$eval.mockImplementation(async () =>
+      cardsReady
+        ? [
+            {
+              title: 'Delayed laptop',
+              price: '₹ 20,000',
+              relativeUrl: '/item/laptop-iid-123',
+            },
+          ]
+        : []
+    );
+
+    const result = await scraper.scrape({ domain: 'olx.in', query: 'laptop' });
+
+    assertIsSuccess(result);
+    expect(result.data.listings[0]?.title).toBe('Delayed laptop');
+    expect(mockPage.close).toHaveBeenCalledOnce();
+  });
+
+  it('reports a failure after the bounded wait if a positive count never produces cards', async () => {
+    const { mockPage } = setupOLXScrapingMocks();
+    mockPage.waitForSelector.mockRejectedValue(new Error('Selector timeout'));
+    mockPage.$eval.mockResolvedValue(4424);
+    mockPage.$$eval.mockResolvedValue([]);
+
+    const result = await scraper.scrape({ domain: 'olx.in', query: 'laptop' });
+
+    expect(result.success).toBe(false);
+    if (!result.success)
+      expect(result.error.message).toContain('4424 results but no listing cards');
+    expect(mockPage.waitForSelector).toHaveBeenCalledWith('li[data-aut-id^="itemBox"]', {
+      timeout: 10000,
+      state: 'attached',
+    });
+    expect(mockPage.close).toHaveBeenCalledOnce();
+  });
+
   it('extracts IDs from India iid listing URLs', () => {
     const extractListingId = (scraper as any).extractListingId.bind(scraper);
 

@@ -7,7 +7,9 @@ import {
 } from '@modelcontextprotocol/server';
 import { serveStdio, type StdioServerHandle } from '@modelcontextprotocol/server/stdio';
 import { z } from 'zod';
+import { performance } from 'node:perf_hooks';
 import { MCP_PROTOCOL_VERSION, toolOutputSchemas } from './tool-output.js';
+import { OLX_DOMAINS } from './domains.js';
 import { chromium, Browser } from 'playwright';
 
 import { ToolRegistry } from './tool-registry.js';
@@ -110,29 +112,57 @@ export class OLXMCPServer {
         throw new ProtocolError(ProtocolErrorCode.InvalidParams, `Tool not found: ${name}`);
       }
 
-      const result = await tool.execute(args || {}, extra.mcpReq.signal);
+      const started = performance.now();
+      let status = 'error';
+      let errorKind = 'exception';
+      let resultCount: number | undefined;
+      try {
+        const result = await tool.execute(args || {}, extra.mcpReq.signal);
 
-      if (!result.success) {
-        return { isError: true, content: [{ type: 'text', text: result.error.message }] };
-      }
+        if (!result.success) {
+          errorKind = 'tool_error';
+          return { isError: true, content: [{ type: 'text', text: result.error.message }] };
+        }
 
-      const response = tool.toMcpResult?.(result.data);
-      // Serialize once to normalize Dates and omit undefined fields before validation.
-      const wireData = response?.structuredContent ?? JSON.parse(JSON.stringify(result.data));
-      const validated = toolOutputSchemas[name]!.safeParse(wireData);
-      if (!validated.success) {
-        console.error(`Invalid output from ${name}:`, validated.error.message);
+        const response = tool.toMcpResult?.(result.data);
+        // Serialize once to normalize Dates and omit undefined fields before validation.
+        const wireData = response?.structuredContent ?? JSON.parse(JSON.stringify(result.data));
+        const validated = toolOutputSchemas[name]!.safeParse(wireData);
+        if (!validated.success) {
+          errorKind = 'invalid_output';
+          return {
+            isError: true,
+            content: [{ type: 'text', text: 'Tool produced an invalid result' }],
+          };
+        }
+        status = 'success';
+        const data = validated.data;
+        const records =
+          data['listings'] ??
+          data['locations'] ??
+          (name === 'getListingImages' ? data['images'] : undefined);
+        resultCount = Array.isArray(records) ? records.length : 1;
         return {
-          isError: true,
-          content: [{ type: 'text', text: 'Tool produced an invalid result' }],
+          structuredContent: validated.data,
+          content: response?.content ?? [
+            { type: 'text' as const, text: JSON.stringify(validated.data) },
+          ],
         };
+      } finally {
+        // Log only fixed operation metadata, never arguments, listing data or image bytes.
+        const domain = OLX_DOMAINS.find(domain => domain === args?.['domain']);
+        console.error(
+          JSON.stringify({
+            event: 'mcp_tool',
+            tool: tool.name,
+            domain,
+            status,
+            elapsedMs: Math.round(performance.now() - started),
+            resultCount,
+            ...(status === 'error' ? { errorKind } : {}),
+          })
+        );
       }
-      return {
-        structuredContent: validated.data,
-        content: response?.content ?? [
-          { type: 'text' as const, text: JSON.stringify(validated.data) },
-        ],
-      };
     });
   }
 

@@ -24,7 +24,17 @@ const client = new Client(
 await client.connect(
   new StdioClientTransport({
     command: 'docker',
-    args: ['run', '--rm', '-i', '--shm-size=256m', 'olx-mcp:local'],
+    args: [
+      'run',
+      '--log-opt',
+      'max-size=10m',
+      '--log-opt',
+      'max-file=3',
+      '--rm',
+      '-i',
+      '--shm-size=256m',
+      'olx-mcp:local',
+    ],
   })
 );
 ```

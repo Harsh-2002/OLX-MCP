@@ -370,6 +370,79 @@ describe('OLXMCPServer', () => {
       );
       expect(execute).toHaveBeenCalledWith({ query: 'x' }, signal);
     });
+    it.each([true, false])('logs only safe request metadata when success is %s', async success => {
+      await server.initialize();
+      const privateValue = 'PRIVATE_QUERY_OR_LISTING';
+      const registry = (server as any).registry;
+      vi.spyOn(registry.get('searchListings'), 'execute').mockResolvedValue(
+        success
+          ? {
+              success: true,
+              data: {
+                listings: [{ id: '123', title: privateValue, url: 'https://www.olx.in/item/123' }],
+                totalCount: 1,
+                currentPage: 1,
+                totalPages: 1,
+                hasNextPage: false,
+              },
+            }
+          : { success: false, error: new Error(privateValue) }
+      );
+      const log = vi.spyOn(console, 'error').mockImplementation(() => {});
+      try {
+        await getHandler('tools/call')({
+          params: {
+            name: 'searchListings',
+            arguments: { domain: 'olx.in', query: privateValue },
+          },
+        });
+        expect(log).toHaveBeenCalledOnce();
+        const summary = JSON.parse(log.mock.calls[0]![0]);
+        expect(summary).toEqual({
+          event: 'mcp_tool',
+          tool: 'searchListings',
+          domain: 'olx.in',
+          status: success ? 'success' : 'error',
+          elapsedMs: expect.any(Number),
+          ...(success ? { resultCount: 1 } : { errorKind: 'tool_error' }),
+        });
+        expect(summary.elapsedMs).toBeGreaterThanOrEqual(0);
+        expect(log.mock.calls[0]![0]).not.toContain(privateValue);
+      } finally {
+        log.mockRestore();
+      }
+    });
+
+    it('logs unexpected failures without retaining unrecognized domain arguments', async () => {
+      await server.initialize();
+      const registry = (server as any).registry;
+      vi.spyOn(registry.get('searchListings'), 'execute').mockRejectedValue(
+        new Error('PRIVATE_ERROR')
+      );
+      const log = vi.spyOn(console, 'error').mockImplementation(() => {});
+      try {
+        await expect(
+          getHandler('tools/call')({
+            params: {
+              name: 'searchListings',
+              arguments: { domain: 'PRIVATE_DOMAIN', query: 'PRIVATE_QUERY' },
+            },
+          })
+        ).rejects.toThrow('PRIVATE_ERROR');
+        expect(log).toHaveBeenCalledOnce();
+        expect(JSON.parse(log.mock.calls[0]![0])).toEqual({
+          event: 'mcp_tool',
+          tool: 'searchListings',
+          status: 'error',
+          elapsedMs: expect.any(Number),
+          errorKind: 'exception',
+        });
+        expect(log.mock.calls[0]![0]).not.toContain('PRIVATE');
+      } finally {
+        log.mockRestore();
+      }
+    });
+
     it('surfaces scraper failures returned by a tool', async () => {
       await server.initialize();
       const registry = (server as any).registry;

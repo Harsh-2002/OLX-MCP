@@ -174,7 +174,7 @@ export abstract class BaseOlxScraper extends PlaywrightScraper<SearchFilters, Se
     return 'domcontentloaded';
   }
 
-  /** A domain may use a summary element as its ready signal when there are no cards. */
+  /** Wait for cards: a result-count summary may arrive before listing hydration. */
   protected getSearchReadySelector(): string {
     return this.domainConfig.selectors.search.listingCard;
   }

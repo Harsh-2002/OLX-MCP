@@ -114,6 +114,10 @@ const result = spawnSync(
   'docker',
   [
     'run',
+    '--log-opt',
+    'max-size=10m',
+    '--log-opt',
+    'max-file=3',
     '--rm',
     '--network=none',
     '--read-only',

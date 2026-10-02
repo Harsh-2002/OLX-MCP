@@ -18,7 +18,7 @@ are included. No OLX account or API key is needed.
 To start the stdio server directly:
 
 ```bash
-docker run --rm -i --shm-size=256m ghcr.io/harsh-2002/olx-mcp:latest
+docker run --log-opt max-size=10m --log-opt max-file=3 --rm -i --shm-size=256m ghcr.io/harsh-2002/olx-mcp:latest
 ```
 
 The server waits for an MCP client. For everyday use, let your client start it
@@ -30,7 +30,7 @@ with one of the setups below. Use a current client with **MCP 2026-07-28** suppo
 <summary>Codex CLI</summary>
 
 ```bash
-codex mcp add olx -- docker run --rm -i --shm-size=256m ghcr.io/harsh-2002/olx-mcp:latest
+codex mcp add olx -- docker run --log-opt max-size=10m --log-opt max-file=3 --rm -i --shm-size=256m ghcr.io/harsh-2002/olx-mcp:latest
 codex --enable mcp_2026_07_28
 ```
 
@@ -40,7 +40,7 @@ codex --enable mcp_2026_07_28
 <summary>Claude Code CLI</summary>
 
 ```bash
-claude mcp add --scope user --transport stdio olx -- docker run --rm -i --shm-size=256m ghcr.io/harsh-2002/olx-mcp:latest
+claude mcp add --scope user --transport stdio olx -- docker run --log-opt max-size=10m --log-opt max-file=3 --rm -i --shm-size=256m ghcr.io/harsh-2002/olx-mcp:latest
 MCP_SDK_GENERATION=v2 MCP_PROTOCOL_NEGOTIATION=auto claude
 ```
 
@@ -63,6 +63,10 @@ then start `opencode`:
         "command": [
           "docker",
           "run",
+          "--log-opt",
+          "max-size=10m",
+          "--log-opt",
+          "max-file=3",
           "--rm",
           "-i",
           "--shm-size=256m",
@@ -81,7 +85,7 @@ then start `opencode`:
 <summary>Hermes Agent</summary>
 
 ```bash
-hermes mcp add olx --command docker --connect-timeout 60 --args run --rm -i --shm-size=256m ghcr.io/harsh-2002/olx-mcp:latest
+hermes mcp add olx --command docker --connect-timeout 60 --args run --log-opt max-size=10m --log-opt max-file=3 --rm -i --shm-size=256m ghcr.io/harsh-2002/olx-mcp:latest
 hermes chat
 ```
 
@@ -94,7 +98,7 @@ use `/reload-mcp` instead of restarting.
 <summary>OpenClaw</summary>
 
 ```bash
-openclaw mcp add olx --command docker --arg run --arg=--rm --arg=-i --arg=--shm-size=256m --arg ghcr.io/harsh-2002/olx-mcp:latest
+openclaw mcp add olx --command docker --arg run --arg=--log-opt --arg=max-size=10m --arg=--log-opt --arg=max-file=3 --arg=--rm --arg=-i --arg=--shm-size=256m --arg ghcr.io/harsh-2002/olx-mcp:latest
 openclaw mcp doctor olx --probe
 ```
 

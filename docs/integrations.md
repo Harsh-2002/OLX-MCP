@@ -64,7 +64,18 @@ entry into `~/.hermes/config.yaml`:
 mcp_servers:
   olx:
     command: docker
-    args: [run, --rm, -i, --shm-size=256m, ghcr.io/harsh-2002/olx-mcp:latest]
+    args:
+      [
+        run,
+        --log-opt,
+        max-size=10m,
+        --log-opt,
+        max-file=3,
+        --rm,
+        -i,
+        --shm-size=256m,
+        ghcr.io/harsh-2002/olx-mcp:latest,
+      ]
     protocol: stateless
     timeout: 180
     connect_timeout: 60
@@ -100,7 +111,17 @@ For clients using `mcpServers` JSON, merge this entry into their MCP configurati
   "mcpServers": {
     "olx": {
       "command": "docker",
-      "args": ["run", "--rm", "-i", "--shm-size=256m", "ghcr.io/harsh-2002/olx-mcp:latest"]
+      "args": [
+        "run",
+        "--log-opt",
+        "max-size=10m",
+        "--log-opt",
+        "max-file=3",
+        "--rm",
+        "-i",
+        "--shm-size=256m",
+        "ghcr.io/harsh-2002/olx-mcp:latest"
+      ]
     }
   }
 }

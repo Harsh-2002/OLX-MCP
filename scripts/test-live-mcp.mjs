@@ -16,7 +16,18 @@ const client = new Client(
 const transport = new StdioClientTransport({
   command: image ? 'docker' : process.execPath,
   args: image
-    ? ['run', '--rm', '-i', '--read-only', '--tmpfs=/tmp:rw,nosuid,size=256m', image]
+    ? [
+        'run',
+        '--log-opt',
+        'max-size=10m',
+        '--log-opt',
+        'max-file=3',
+        '--rm',
+        '-i',
+        '--read-only',
+        '--tmpfs=/tmp:rw,nosuid,size=256m',
+        image,
+      ]
     : ['dist/index.js'],
   stderr: 'inherit',
 });

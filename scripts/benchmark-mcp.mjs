@@ -59,6 +59,10 @@ async function measure(image, modern) {
     command: 'docker',
     args: [
       'run',
+      '--log-opt',
+      'max-size=10m',
+      '--log-opt',
+      'max-file=3',
       '--rm',
       '-i',
       '--network=none',

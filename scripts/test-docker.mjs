@@ -8,6 +8,10 @@ const image = process.argv[2] || 'olx-mcp:local';
 const { version } = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
 const runtimeArgs = [
   'run',
+  '--log-opt',
+  'max-size=10m',
+  '--log-opt',
+  'max-file=3',
   '--rm',
   '--network=none',
   '--read-only',
@@ -47,6 +51,26 @@ const browserCheck = spawnSync(
           assert.equal(result.success, true, 'SSR fixture search must succeed');
           assert.equal(result.data.listings[0]?.title, 'Fixture listing', 'SSR cards must survive page scripts');
         }
+        // A populated result count must not let India extraction outrun card hydration.
+        const indiaBrowser = { newPage: async options => {
+          const fixturePage = await browser.newPage(options);
+          await fixturePage.addInitScript(() => {
+            setTimeout(() => {
+              const card = document.createElement('li');
+              card.setAttribute('data-aut-id', 'itemBox');
+              card.innerHTML = '<a href="/item/delayed-laptop-iid-123"><span data-aut-id="itemTitle">Delayed laptop</span><span data-aut-id="itemPrice">INR 20000</span></a>';
+              document.body.append(card);
+            }, 400);
+          });
+          await fixturePage.route('https://www.olx.in/**', route => route.fulfill({
+            status: 200, contentType: 'text/html',
+            body: '<div data-aut-id="searchTextPage">Results</div><span>4424 results</span>',
+          }));
+          return fixturePage;
+        } };
+        const indiaResult = await new OlxScraperFactory(indiaBrowser).getScraper('olx.in').scrape({ domain: 'olx.in', query: 'fixture', limit: 1 });
+        assert.equal(indiaResult.success, true, 'India must wait for delayed cards after its count appears');
+        assert.equal(indiaResult.data.listings[0]?.title, 'Delayed laptop');
         const polishDetail = '<div data-testid="offer_title"><h4>Polish fixture title</h4><button>Watch</button></div><div data-testid="ad-price-container">10 PLN</div><div data-testid="ad_description">Fixture description</div><script>document.querySelector("[data-testid=offer_title]").remove();</script>';
         const polishBrowser = { newPage: async options => {
           const fixturePage = await browser.newPage(options);

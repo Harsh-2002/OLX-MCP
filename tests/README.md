@@ -80,7 +80,9 @@ Build the image with `docker build -t olx-mcp:local .`, then run
 container's stdio MCP server with network access disabled. An offline SSR fixture
 also verifies that frontend scripts cannot remove European or Central Asian search
 cards before extraction, and that Polish details preserve the title without action-button text. These checks are separate
-from the mocked suite and live OLX checks. Native MCP image bytes are also verified against an offline photo fixture. See [Docker](../docs/docker.md).
+from the mocked suite and live OLX checks. Native MCP image bytes are also verified against an offline photo fixture.
+An India fixture exposes a positive result count before delayed listing cards
+and verifies that extraction waits for the cards. See [Docker](../docs/docker.md).
 
 ## MCP live verification
 
@@ -118,3 +120,7 @@ The manually triggered **Publish Docker image** workflow runs the full suite and
 offline runtime checks on native AMD64 and ARM64 Ubuntu 24.04 runners. It checks
 each image before and after its platform digest is uploaded, then combines both
 verified images under `latest`.
+
+Request-summary tests cover success and failure, result counts and exclusion of
+private arguments and result contents from stderr logs. India regression tests
+cover delayed cards and a positive count whose cards never appear.

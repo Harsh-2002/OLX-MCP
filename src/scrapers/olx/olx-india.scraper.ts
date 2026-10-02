@@ -24,11 +24,6 @@ export class OLXIndiaScraper extends LoadMoreOlxScraper {
     return 'domcontentloaded';
   }
 
-  protected override getSearchReadySelector(): string {
-    const search = this.domainConfig.selectors.search;
-    return `${search.listingCard}, ${search.totalCount}`;
-  }
-
   protected override getDirectListingUrl(listingId: ListingId): string {
     return `${this.domainConfig.baseUrl}/item/${encodeURIComponent(listingId)}`;
   }

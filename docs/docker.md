@@ -4,7 +4,7 @@
 
 ```bash
 docker pull ghcr.io/harsh-2002/olx-mcp:latest
-docker run --rm ghcr.io/harsh-2002/olx-mcp:latest --version
+docker run --log-opt max-size=10m --log-opt max-file=3 --rm ghcr.io/harsh-2002/olx-mcp:latest --version
 ```
 
 The public image includes Chromium and its system libraries. The single `latest`
@@ -40,11 +40,18 @@ This image serves MCP 2026-07-28 over standard input/output. Older protocol
 clients are rejected. Run it with stdin attached:
 
 ```bash
-docker run --rm -i --shm-size=256m ghcr.io/harsh-2002/olx-mcp:latest
+docker run --log-opt max-size=10m --log-opt max-file=3 --rm -i --shm-size=256m ghcr.io/harsh-2002/olx-mcp:latest
 ```
 
 Do not allocate a TTY for an MCP connection. There is no HTTP endpoint or port
 mapping in this image.
+
+All run examples limit Docker logs to three files of up to 10 MB each, roughly
+30 MB per container. Rotation removes older files. These options apply when the
+container is created; recreate an existing container to change its logging limits.
+MCP responses still travel over stdout and may be retained in Docker logs,
+including photo payloads. Operational summaries use stderr and include only tool,
+domain, duration, status and result count, never queries or listing contents.
 
 MCP client configuration:
 
@@ -55,6 +62,10 @@ MCP client configuration:
       "command": "docker",
       "args": [
         "run",
+        "--log-opt",
+        "max-size=10m",
+        "--log-opt",
+        "max-file=3",
         "--rm",
         "-i",
         "--shm-size=256m",
@@ -74,7 +85,7 @@ are in memory, so use search and details within the same connection.
 For a read-only container, add a writable temporary filesystem:
 
 ```bash
-docker run --rm -i --shm-size=256m --read-only --tmpfs /tmp:rw,nosuid,size=256m ghcr.io/harsh-2002/olx-mcp:latest
+docker run --log-opt max-size=10m --log-opt max-file=3 --rm -i --shm-size=256m --read-only --tmpfs /tmp:rw,nosuid,size=256m ghcr.io/harsh-2002/olx-mcp:latest
 ```
 
 Normal scraping requires outbound network access. No host directories or Docker
@@ -85,8 +96,8 @@ does not change those flags.
 ## Verify
 
 ```bash
-docker run --rm olx-mcp:local --version
-docker run --rm olx-mcp:local --help
+docker run --log-opt max-size=10m --log-opt max-file=3 --rm olx-mcp:local --version
+docker run --log-opt max-size=10m --log-opt max-file=3 --rm olx-mcp:local --help
 npm run test:docker
 ```
 

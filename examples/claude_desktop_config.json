@@ -2,7 +2,17 @@
   "mcpServers": {
     "olx": {
       "command": "docker",
-      "args": ["run", "--rm", "-i", "--shm-size=256m", "ghcr.io/harsh-2002/olx-mcp:latest"]
+      "args": [
+        "run",
+        "--log-opt",
+        "max-size=10m",
+        "--log-opt",
+        "max-file=3",
+        "--rm",
+        "-i",
+        "--shm-size=256m",
+        "ghcr.io/harsh-2002/olx-mcp:latest"
+      ]
     }
   }
 }
