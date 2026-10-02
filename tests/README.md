@@ -110,6 +110,11 @@ errors, unknown-tool protocol errors, cancellation, and rejection of a legacy
 `initialize` request. Server unit tests also verify ISO date serialization and
 rejection of output that does not match the advertised schema.
 
-Docker CI runs the offline runtime checks on native AMD64 and ARM64 Ubuntu 24.04
-runners. The publishing workflow repeats those checks before and after each
-platform digest is uploaded, then combines both verified images under `latest`.
+Automatic CI on pushes to `main` (including merges) and pull requests runs lint,
+formatting, TypeScript checks, all unit and protocol tests with coverage, and the
+TypeScript build on Node.js 22 and 24. It does not build Docker images.
+
+The manually triggered **Publish Docker image** workflow runs the full suite and
+offline runtime checks on native AMD64 and ARM64 Ubuntu 24.04 runners. It checks
+each image before and after its platform digest is uploaded, then combines both
+verified images under `latest`.

@@ -35,25 +35,3 @@ jobs:
         with:
           name: coverage
           path: coverage/
-
-  docker:
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - arch: amd64
-            runner: ubuntu-24.04
-          - arch: arm64
-            runner: ubuntu-24.04-arm
-    runs-on: ${{ matrix.runner }}
-    steps:
-      - uses: actions/checkout@v7.0.1
-      - uses: actions/setup-node@v7.0.0
-        with:
-          node-version: 24
-          cache: npm
-      - run: npm ci
-      - name: Build runtime image
-        run: docker build --tag olx-mcp:local .
-      - name: Check container runtime and MCP
-        run: npm run test:docker

@@ -60,7 +60,9 @@ anonymous pulls. See
 steps and verification commands.
 
 CI on `main` and pull requests runs the full validation suite on Node.js 22 and 24
-on Ubuntu 24.04. Docker checks also run on native AMD64 and ARM64 runners.
+on Ubuntu 24.04. Pushes (including merges) and pull requests do not build or
+publish Docker images. Docker builds and native AMD64/ARM64 runtime checks run
+only when a maintainer manually starts **Publish Docker image**.
 Workflow actions use their current stable Node.js 24 runtime
 releases. Keep the explicit runner image and action versions reviewed when
 updating CI.

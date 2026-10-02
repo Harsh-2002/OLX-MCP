@@ -101,8 +101,10 @@ To check a different local image:
 npm run test:docker -- olx-mcp:custom
 ```
 
-CI builds the image and runs these checks without publishing it. To verify the
-published image instead, run:
+Docker builds and runtime checks run only in the manually triggered publishing
+workflow, or when you run them locally. Automatic push and pull-request CI runs
+the unit and protocol suite without building images. To verify the published
+image locally, run:
 
 ```bash
 npm run test:docker -- ghcr.io/harsh-2002/olx-mcp:latest
